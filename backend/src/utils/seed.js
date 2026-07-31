@@ -140,10 +140,28 @@ async function seedData() {
     },
   ];
 
+const DISTRICT_COORDS = {
+  "Long Xuyên": { lat: 10.3833, lng: 105.4167 },
+  "Châu Đốc": { lat: 10.7000, lng: 105.1167 },
+  "Châu Phú": { lat: 10.5500, lng: 105.1333 },
+  "Chợ Mới": { lat: 10.4500, lng: 105.5333 },
+  "Thoại Sơn": { lat: 10.2833, lng: 105.2333 },
+  "Tri Tôn": { lat: 10.4167, lng: 105.0000 },
+  "Phú Tân": { lat: 10.6333, lng: 105.3500 },
+  "Tân Châu": { lat: 10.8000, lng: 105.2333 },
+  "Tịnh Biên": { lat: 10.6000, lng: 104.9500 },
+  "Châu Thành": { lat: 10.4333, lng: 105.3167 },
+};
+
   const catMap = Object.fromEntries(categories.map((c) => [c.slug, c._id]));
   const machines = [];
   for (const m of sampleMachines) {
     const district = DISTRICTS[Math.floor(Math.random() * DISTRICTS.length)];
+    const coords = DISTRICT_COORDS[district] || { lat: 10.3833, lng: 105.4167 };
+    // Thêm khoảng chênh lệch nhỏ ngẫu nhiên để các máy cùng huyện không đè khít lên nhau trên bản đồ
+    const lat = Number((coords.lat + (Math.random() * 0.03 - 0.015)).toFixed(6));
+    const lng = Number((coords.lng + (Math.random() * 0.03 - 0.015)).toFixed(6));
+
     const doc = await Machine.create({
       owner_id: m.owner._id,
       category_id: catMap[m.cat],
@@ -155,6 +173,8 @@ async function seedData() {
       price_unit: "ngày",
       district,
       address_detail: `Ấp 1, xã ${district}`,
+      lat,
+      lng,
       status: "approved",
       rating_avg: (3.5 + Math.random() * 1.5).toFixed(1),
       rating_count: Math.floor(Math.random() * 20) + 1,
@@ -172,6 +192,8 @@ async function seedData() {
     price_per_day: 1100000,
     price_unit: "ngày",
     district: "Long Xuyên",
+    lat: 10.3850,
+    lng: 105.4180,
     status: "pending",
     description: "Máy mới đăng, đang chờ admin duyệt.",
   });

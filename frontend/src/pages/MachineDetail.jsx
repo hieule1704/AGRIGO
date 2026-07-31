@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { categoryIcon, formatVND, formatDate } from '../components/MachineCard';
+import MachineMap from '../components/MachineMap';
 
 export default function MachineDetail() {
   const { id } = useParams();
@@ -65,6 +66,14 @@ export default function MachineDetail() {
               <div className="spec-item"><div className="k">Khu vực</div><div className="v">{machine.district}</div></div>
             </div>
           </div>
+
+          {machine.lat && machine.lng && (
+            <div className="card-box" style={{ marginTop: 20 }}>
+              <h3>🗺 Vị trí máy trên bản đồ</h3>
+              <p className="small" style={{ marginBottom: 12 }}>📍 {machine.district} {machine.address_detail ? `(${machine.address_detail})` : ''} · Tọa độ: {machine.lat}, {machine.lng}</p>
+              <MachineMap machines={[machine]} center={[machine.lat, machine.lng]} zoom={13} height="280px" />
+            </div>
+          )}
 
           <div className="card-box">
             <h3>Chủ máy</h3>

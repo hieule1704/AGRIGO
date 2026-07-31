@@ -5,15 +5,21 @@ const { connectDB } = require("./src/config/db");
 const Category = require("./src/models/Category");
 const { seedData } = require("./src/utils/seed");
 
+const path = require("path");
+
 const authRoutes = require("./src/routes/auth.routes");
 const categoryRoutes = require("./src/routes/category.routes");
 const machineRoutes = require("./src/routes/machine.routes");
 const bookingRoutes = require("./src/routes/booking.routes");
 const adminRoutes = require("./src/routes/admin.routes");
+const uploadRoutes = require("./src/routes/upload.routes");
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(express.json());
+
+// Phục vụ file tĩnh hình ảnh trong thư mục /uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.json({
@@ -28,6 +34,7 @@ app.get("/", (req, res) => {
       machines: "/api/machines",
       bookings: "/api/bookings",
       admin: "/api/admin",
+      upload: "/api/upload",
     },
   });
 });
@@ -41,6 +48,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/machines", machineRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Trinh loi chung
 app.use((err, req, res, next) => {

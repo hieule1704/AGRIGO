@@ -80,10 +80,18 @@ Frontend đã cấu hình sẵn proxy `/api` → `http://localhost:5000` (xem `v
 
 Muốn thêm trường (VD: ảnh nhiều tấm, loại nhiên liệu, diện tích tối thiểu...) chỉ cần sửa file model tương ứng trong `backend/src/models/` — không cần đụng vào phần còn lại.
 
-## 6. Các bước tiếp theo khi bạn có ảnh giao diện thật
+## 6. Lưu trữ & Quản lý Hình ảnh (Local Storage & Direct URL)
 
-- Thay `image_url` khi đăng máy (form đã có sẵn field) bằng ảnh thật (upload lên Cloudinary/S3 free tier hoặc dùng link ảnh có sẵn).
-- Có thể thêm bản đồ thật (Leaflet/OpenStreetMap) vào trang tìm kiếm bằng cách dùng field `lat/lng` đã có sẵn trong model `Machine`.
+Hệ thống được thiết kế lưu trữ hình ảnh hoàn toàn linh hoạt mà **không bắt buộc dùng dịch vụ Cloud bên thứ 3**:
+
+- **📁 Tải ảnh Local (Multer)**: Khi Chủ máy (Owner) chọn file từ máy tính, ảnh sẽ được tự động lưu vào thư mục `backend/uploads/` và được Express phục vụ qua đường dẫn tĩnh `/uploads/filename.jpg`.
+- **🔗 Dán đường dẫn trực tiếp (Direct URL)**: Hỗ trợ dán link ảnh từ bất kỳ nguồn online nào (hoặc link ảnh máy tính).
+- **👁 Xem trước ảnh (Image Preview)**: Giao diện hiển thị tức thì xem trước hình ảnh trước khi lưu.
+- **🛡 Admin xem duyệt**: Trang Quản trị (Admin) hiển thị ảnh thu nhỏ của các máy đang chờ duyệt giúp công tác kiểm duyệt trực quan.
+
+## 7. Các bước mở rộng tiếp theo
+
+- Thêm bản đồ (Leaflet/OpenStreetMap) vào trang tìm kiếm bằng cách dùng field `lat/lng` đã có sẵn trong model `Machine`.
 - Deploy miễn phí gợi ý: **Backend** → Render.com / Railway (free tier) + MongoDB Atlas free; **Frontend** → Vercel/Netlify (build lệnh `npm run build`, thư mục `dist`).
 
 ---

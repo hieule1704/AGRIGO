@@ -11,6 +11,9 @@ import Register from './pages/Register';
 import OwnerDashboard from './pages/OwnerDashboard';
 import FarmerBookings from './pages/FarmerBookings';
 import AdminDashboard from './pages/AdminDashboard';
+import About from './pages/About';
+import PricingPolicy from './pages/PricingPolicy';
+import Guide from './pages/Guide';
 
 export default function App() {
   return (
@@ -22,6 +25,9 @@ export default function App() {
         <Route path="/machine/:id" element={<MachineDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/pricing" element={<PricingPolicy />} />
+        <Route path="/guide" element={<Guide />} />
 
         <Route path="/owner/*" element={
           <ProtectedRoute roles={['owner']}><OwnerDashboard /></ProtectedRoute>

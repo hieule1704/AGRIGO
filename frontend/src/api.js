@@ -29,4 +29,27 @@ export const api = {
   put: (path, body) => request(path, { method: 'PUT', body }),
   patch: (path, body) => request(path, { method: 'PATCH', body }),
   del: (path) => request(path, { method: 'DELETE' }),
+
+  upload: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const headers = {};
+    const t = localStorage.getItem('agrigo_token');
+    if (t) headers.Authorization = `Bearer ${t}`;
+
+    const res = await fetch(BASE + '/upload', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    let data = {};
+    try { data = await res.json(); } catch (_) { /* no body */ }
+
+    if (!res.ok) {
+      throw new Error(data.error || `Lỗi upload ${res.status}`);
+    }
+    return data;
+  },
 };

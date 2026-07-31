@@ -17,7 +17,10 @@ export default function Header() {
           <Link to="/" className="logo"><span className="mark">A</span>AGRIGO</Link>
           <nav className="nav-links">
             <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>Trang chủ</NavLink>
-            <NavLink to="/search" className={({ isActive }) => isActive ? 'active' : ''}>Tìm máy nông nghiệp</NavLink>
+            <NavLink to="/search" className={({ isActive }) => isActive ? 'active' : ''}>Tìm máy</NavLink>
+            <NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>Giới thiệu</NavLink>
+            <NavLink to="/pricing" className={({ isActive }) => isActive ? 'active' : ''}>Bảng giá & Chính sách</NavLink>
+            <NavLink to="/guide" className={({ isActive }) => isActive ? 'active' : ''}>Hướng dẫn</NavLink>
           </nav>
           <div className="header-actions">
             {!user && (

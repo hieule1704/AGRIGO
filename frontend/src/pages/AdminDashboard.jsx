@@ -73,11 +73,18 @@ export default function AdminDashboard() {
               </select>
             </div>
             <table className="data-table">
-              <thead><tr><th>Tên máy</th><th>Chủ máy</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th></th></tr></thead>
+              <thead><tr><th>Hình ảnh</th><th>Tên máy</th><th>Chủ máy</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th></th></tr></thead>
               <tbody>
                 {machines.map((m) => (
                   <tr key={m._id}>
-                    <td>{m.name}<br /><span className="small">{m.category_id?.name}</span></td>
+                    <td>
+                      {m.image_url ? (
+                        <img src={m.image_url} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+                      ) : (
+                        <span style={{ fontSize: 24 }}>🚜</span>
+                      )}
+                    </td>
+                    <td><b>{m.name}</b><br /><span className="small">{m.category_id?.name}</span></td>
                     <td>{m.owner_id?.full_name}<br /><span className="small">{m.owner_id?.phone}</span></td>
                     <td>{m.district}</td>
                     <td>{formatVND(m.price_per_day)}</td>
@@ -91,7 +98,7 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 ))}
-                {machines.length === 0 && <tr><td colSpan={6} className="small" style={{ padding: 20 }}>Không có máy nào.</td></tr>}
+                {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Không có máy nào.</td></tr>}
               </tbody>
             </table>
           </div>

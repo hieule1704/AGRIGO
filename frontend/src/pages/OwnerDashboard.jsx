@@ -12,10 +12,34 @@ export default function OwnerDashboard() {
   const [categories, setCategories] = useState([]);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
+  const DISTRICT_COORDS = {
+    'Long Xuyên': { lat: 10.3833, lng: 105.4167 },
+    'Châu Đốc': { lat: 10.7000, lng: 105.1167 },
+    'Châu Phú': { lat: 10.5500, lng: 105.1333 },
+    'Chợ Mới': { lat: 10.4500, lng: 105.5333 },
+    'Thoại Sơn': { lat: 10.2833, lng: 105.2333 },
+    'Tri Tôn': { lat: 10.4167, lng: 105.0000 },
+    'Phú Tân': { lat: 10.6333, lng: 105.3500 },
+    'Tân Châu': { lat: 10.8000, lng: 105.2333 },
+    'Tịnh Biên': { lat: 10.6000, lng: 104.9500 },
+    'Châu Thành': { lat: 10.4333, lng: 105.3167 },
+  };
+
   const [form, setForm] = useState({
     category_id: '', name: '', description: '', brand: '', year_made: '',
     price_per_day: '', price_unit: 'ngày', district: '', address_detail: '', image_url: '',
+    lat: '', lng: '',
   });
+
+  function handleDistrictChange(dist) {
+    const coords = DISTRICT_COORDS[dist];
+    setForm((prev) => ({
+      ...prev,
+      district: dist,
+      lat: coords ? coords.lat : prev.lat,
+      lng: coords ? coords.lng : prev.lng,
+    }));
+  }
 
   function loadMachines() { api.get('/machines/mine').then((d) => setMachines(d.machines)); }
   function loadBookings() { api.get('/bookings/owner').then((d) => setBookings(d.bookings)); }
@@ -26,13 +50,32 @@ export default function OwnerDashboard() {
     loadBookings();
   }, []);
 
+  const [imageMode, setImageMode] = useState('file'); // 'file' | 'url'
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    setErr('');
+    try {
+      const res = await api.upload(file);
+      setForm((prev) => ({ ...prev, image_url: res.url }));
+      setOk('Tải ảnh thành công!');
+    } catch (error) {
+      setErr('Lỗi tải ảnh: ' + error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   async function submitMachine(e) {
     e.preventDefault();
     setErr(''); setOk('');
     try {
       await api.post('/machines', form);
       setOk('Đã đăng máy thành công! Máy đang chờ quản trị viên duyệt.');
-      setForm({ category_id: '', name: '', description: '', brand: '', year_made: '', price_per_day: '', price_unit: 'ngày', district: '', address_detail: '', image_url: '' });
+      setForm({ category_id: '', name: '', description: '', brand: '', year_made: '', price_per_day: '', price_unit: 'ngày', district: '', address_detail: '', image_url: '', lat: '', lng: '' });
       loadMachines();
     } catch (e) { setErr(e.message); }
   }
@@ -73,11 +116,18 @@ export default function OwnerDashboard() {
           <div className="card-box">
             <h3>Danh sách máy</h3>
             <table className="data-table">
-              <thead><tr><th>Tên máy</th><th>Loại</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th>Đánh giá</th></tr></thead>
+              <thead><tr><th>Hình ảnh</th><th>Tên máy</th><th>Loại</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th>Đánh giá</th></tr></thead>
               <tbody>
                 {machines.map((m) => (
                   <tr key={m._id}>
-                    <td>{m.name}</td>
+                    <td>
+                      {m.image_url ? (
+                        <img src={m.image_url} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+                      ) : (
+                        <span style={{ fontSize: 24 }}>🚜</span>
+                      )}
+                    </td>
+                    <td><b>{m.name}</b></td>
                     <td>{m.category_id?.name}</td>
                     <td>{m.district}</td>
                     <td>{formatVND(m.price_per_day)}</td>
@@ -85,7 +135,7 @@ export default function OwnerDashboard() {
                     <td>{m.rating_count > 0 ? `★ ${Number(m.rating_avg).toFixed(1)} (${m.rating_count})` : '—'}</td>
                   </tr>
                 ))}
-                {machines.length === 0 && <tr><td colSpan={6} className="small" style={{ padding: 20 }}>Bạn chưa đăng máy nào. Vào tab "Đăng máy mới" để bắt đầu.</td></tr>}
+                {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Bạn chưa đăng máy nào. Vào tab "Đăng máy mới" để bắt đầu.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -109,9 +159,79 @@ export default function OwnerDashboard() {
                 <div className="field"><label>Thương hiệu</label><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} /></div>
                 <div className="field"><label>Đời máy (năm)</label><input type="number" value={form.year_made} onChange={(e) => setForm({ ...form, year_made: e.target.value })} /></div>
                 <div className="field"><label>Giá thuê / ngày (VNĐ)</label><input type="number" required value={form.price_per_day} onChange={(e) => setForm({ ...form, price_per_day: e.target.value })} /></div>
-                <div className="field"><label>Khu vực</label><input required placeholder="VD: Thoại Sơn" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} /></div>
+                <div className="field">
+                  <label>Khu vực</label>
+                  <select required value={form.district} onChange={(e) => handleDistrictChange(e.target.value)}>
+                    <option value="">-- Chọn khu vực --</option>
+                    {Object.keys(DISTRICT_COORDS).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field"><label>Vĩ độ (Lat, tùy chọn)</label><input type="number" step="any" placeholder="10.3833" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} /></div>
+                <div className="field"><label>Kinh độ (Lng, tùy chọn)</label><input type="number" step="any" placeholder="105.4167" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} /></div>
                 <div className="field full"><label>Địa chỉ chi tiết</label><input value={form.address_detail} onChange={(e) => setForm({ ...form, address_detail: e.target.value })} /></div>
-                <div className="field full"><label>Link hình ảnh (URL, tuỳ chọn)</label><input placeholder="https://..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
+
+                {/* Phần chọn và lưu ảnh Local hoặc URL */}
+                <div className="field full">
+                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Hình ảnh sản phẩm</span>
+                    <span style={{ fontSize: 13, fontWeight: 'normal', color: 'var(--muted)' }}>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${imageMode === 'file' ? 'btn-primary' : 'btn-outline'}`}
+                        style={{ marginRight: 6, padding: '2px 8px' }}
+                        onClick={() => setImageMode('file')}
+                      >
+                        📁 Tải file từ máy
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${imageMode === 'url' ? 'btn-primary' : 'btn-outline'}`}
+                        style={{ padding: '2px 8px' }}
+                        onClick={() => setImageMode('url')}
+                      >
+                        🔗 Dán đường dẫn URL
+                      </button>
+                    </span>
+                  </label>
+
+                  {imageMode === 'file' ? (
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4 }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        style={{ padding: 6 }}
+                      />
+                      {uploadingImage && <span className="small">Đang tải ảnh lên máy chủ local...</span>}
+                    </div>
+                  ) : (
+                    <input
+                      placeholder="Nhập đường dẫn URL (vd: https://... hoặc /uploads/...)"
+                      value={form.image_url}
+                      onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                      style={{ marginTop: 4 }}
+                    />
+                  )}
+
+                  {/* Khung xem trước hình ảnh */}
+                  {form.image_url && (
+                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-light)', padding: 8, borderRadius: 8 }}>
+                      <img
+                        src={form.image_url}
+                        alt="Xem trước"
+                        style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }}
+                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/80?text=Lỗi+ảnh'; }}
+                      />
+                      <div>
+                        <div className="small" style={{ wordBreak: 'break-all', marginBottom: 4 }}><b>Đường dẫn ảnh:</b> {form.image_url}</div>
+                        <button type="button" className="btn btn-danger btn-sm" onClick={() => setForm({ ...form, image_url: '' })}>Xóa ảnh</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="field full"><label>Mô tả</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               </div>
               <button className="btn btn-primary" type="submit" style={{ marginTop: 8 }}>Đăng máy</button>

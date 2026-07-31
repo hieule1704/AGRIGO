@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import MachineCard, { categoryIcon } from '../components/MachineCard';
 
@@ -26,13 +26,14 @@ export default function Home() {
   }
 
   const stats = {
-    machineCount: featured.length ? 20 : 0,
-    ownerCount: 12,
-    bookingCount: 45,
+    machineCount: featured.length ? 120 : 0,
+    ownerCount: 45,
+    bookingCount: 380,
   };
 
   return (
     <>
+      {/* Hero Section */}
       <section className="hero">
         <div className="container hero-inner">
           <span className="eyebrow">🌾 Nền tảng kết nối máy nông nghiệp #1 khu vực ĐBSCL</span>
@@ -69,17 +70,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Danh mục loại máy */}
       <div className="container">
         <div className="cat-grid">
           {categories.map((c) => (
-            <a key={c._id} href={`/search?category=${c._id}`} className="cat-card">
+            <Link key={c._id} to={`/search?category=${c._id}`} className="cat-card">
               <div className="ico">{categoryIcon(c.slug)}</div>
               <div className="name">{c.name}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
 
+      {/* Danh sách máy nổi bật */}
       <section className="section">
         <div className="container">
           <div className="section-head">
@@ -88,7 +91,7 @@ export default function Home() {
               <h2>Máy nông nghiệp nổi bật</h2>
               <p>Được đánh giá cao và sẵn sàng nhận lịch trong tuần này</p>
             </div>
-            <a href="/search" className="btn btn-outline">Xem tất cả</a>
+            <Link to="/search" className="btn btn-outline">Xem tất cả</Link>
           </div>
           <div className="card-grid">
             {featured.length
@@ -98,30 +101,76 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" style={{ background: 'var(--green-soft)' }}>
+      {/* Quy trình 3 bước làm việc */}
+      <section className="section" style={{ background: '#F4F7F4' }}>
         <div className="container">
-          <div className="section-head">
+          <div className="section-head" style={{ marginBottom: 32 }}>
             <div>
-              <p className="eyebrow-label">Cách vận hành</p>
+              <p className="eyebrow-label">Quy trình đơn giản</p>
               <h2>3 bước để có máy làm ruộng đúng ngày</h2>
+              <p>Hệ thống tự động hóa giúp nông dân và chủ máy dễ dàng kết nối chỉ với vài cú nhấp chuột</p>
             </div>
           </div>
-          <div className="cat-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-            <div className="cat-card" style={{ textAlign: 'left', padding: 22 }}>
-              <div className="ico">📍</div>
-              <h3 style={{ margin: '6px 0', fontSize: 16 }}>1. Tìm máy gần bạn</h3>
-              <p className="small">Chọn khu vực, loại máy và ngày cần dùng.</p>
+          <div className="steps-grid">
+            <div className="step-card">
+              <div className="step-num">1</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 17 }}>Tìm máy gần bạn</h3>
+              <p className="small" style={{ lineHeight: 1.6 }}>Chọn địa bàn huyện (Long Xuyên, Châu Đốc, Thoại Sơn...), loại máy cần thuê và ngày dự kiến làm ruộng.</p>
             </div>
-            <div className="cat-card" style={{ textAlign: 'left', padding: 22 }}>
-              <div className="ico">📅</div>
-              <h3 style={{ margin: '6px 0', fontSize: 16 }}>2. Đặt lịch trực tuyến</h3>
-              <p className="small">Xem giá công khai, gửi yêu cầu đặt lịch.</p>
+            <div className="step-card">
+              <div className="step-num">2</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 17 }}>Đặt lịch trực tuyến</h3>
+              <p className="small" style={{ lineHeight: 1.6 }}>Xem trước thông số kỹ thuật, vị trí trên bản đồ, giá niêm yết công khai và gửi yêu cầu lịch thuê.</p>
             </div>
-            <div className="cat-card" style={{ textAlign: 'left', padding: 22 }}>
-              <div className="ico">✅</div>
-              <h3 style={{ margin: '6px 0', fontSize: 16 }}>3. Nhận máy & đánh giá</h3>
-              <p className="small">Máy đến đúng hẹn, đánh giá sau khi hoàn tất.</p>
+            <div className="step-card">
+              <div className="step-num">3</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 17 }}>Nhận máy & Đánh giá</h3>
+              <p className="small" style={{ lineHeight: 1.6 }}>Chủ máy đến tận công ruộng làm đúng hẹn. Nông dân nghiệm thu và để lại đánh giá uy tín chất lượng dịch vụ.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Vì sao chọn AGRIGO */}
+      <section className="section">
+        <div className="container">
+          <div className="section-head" style={{ textAlignment: 'center' }}>
+            <div>
+              <p className="eyebrow-label">Ưu điểm vượt trội</p>
+              <h2>Tại sao bà con tin chọn AGRIGO?</h2>
+            </div>
+          </div>
+          <div className="marketing-grid">
+            <div className="feature-card">
+              <div className="icon">🛡️</div>
+              <h3>Chủ máy xác minh 100%</h3>
+              <p>Tất cả danh tính chủ máy và phương tiện đều được đội ngũ AGRIGO kiểm duyệt giấy tờ kỹ thuật trước khi cho phép nhận đơn.</p>
+            </div>
+            <div className="feature-card">
+              <div className="icon">💵</div>
+              <h3>Giá công khai, không ép giá</h3>
+              <p>Mọi mức giá thuê theo ngày/công ruộng đều niêm yết minh bạch. Nông dân không lo bị tăng giá đột ngột vào mùa vụ cao điểm.</p>
+            </div>
+            <div className="feature-card">
+              <div className="icon">🗺️</div>
+              <h3>Bản đồ máy thông minh</h3>
+              <p>Dễ dàng định vị các phương tiện cơ giới gần công ruộng của bạn, giảm chi phí vận chuyển đường bộ/đường sông.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Banner kêu gọi Chủ máy đăng ký */}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <div className="cta-banner">
+            <div>
+              <h2>Bạn đang sở hữu máy cày, máy gặt hoặc drone?</h2>
+              <p>Gia nhập mạng lưới AGRIGO để tăng 40% doanh thu mùa vụ và tối ưu hóa lịch làm việc cho thiết bị của bạn.</p>
+            </div>
+            <Link to="/register" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: 15, flexShrink: 0 }}>
+              🚜 Đăng ký Chủ máy ngay
+            </Link>
           </div>
         </div>
       </section>
