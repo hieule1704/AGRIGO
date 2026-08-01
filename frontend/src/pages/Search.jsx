@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { api } from '../api';
-import { categoryIcon, formatVND } from '../components/MachineCard';
+import { categoryIcon, formatVND, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
 
@@ -19,12 +20,15 @@ const DISTRICT_CENTERS = {
   'Châu Thành': [10.4333, 105.3167],
 };
 
+const ITEMS_PER_PAGE = 6;
+
 export default function Search() {
   const [params, setParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [machines, setMachines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'list' | 'map'
+  const [page, setPage] = useState(1);
 
   const district = params.get('district') || '';
   const category = params.get('category') || '';
@@ -37,6 +41,7 @@ export default function Search() {
 
   useEffect(() => {
     setLoading(true);
+    setPage(1);
     const q = new URLSearchParams();
     if (district) q.set('district', district);
     if (category) q.set('category', category);
@@ -46,6 +51,12 @@ export default function Search() {
       .then((d) => setMachines(d.machines))
       .finally(() => setLoading(false));
   }, [district, category, date, sort]);
+
+  const totalPages = Math.ceil(machines.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const paginatedMachines = machines.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useScrollReveal([paginatedMachines, viewMode, page]);
 
   function updateParam(key, value) {
     const next = new URLSearchParams(params);
@@ -138,7 +149,9 @@ export default function Search() {
       {/* Thanh điều khiển Chế độ xem: Danh sách / Bản đồ / Song song */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, background: 'var(--bg-card)', padding: '10px 16px', borderRadius: 12, border: '1px solid var(--line)' }}>
         <div>
-          <span className="small" style={{ color: 'var(--muted)' }}>Tìm thấy <b>{machines.length}</b> máy nông nghiệp</span>
+          <span className="small" style={{ color: 'var(--muted)' }}>
+            Tìm thấy <b>{machines.length}</b> máy nông nghiệp · Trang <b>{page}</b>/<b>{totalPages}</b>
+          </span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
@@ -191,13 +204,13 @@ export default function Search() {
               {viewMode === 'split' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div style={{ position: 'sticky', top: 80, height: 'calc(100vh - 120px)' }}>
-                    <MachineMap machines={machines} center={mapCenter} zoom={district ? 12 : 10} height="100%" />
+                    <MachineMap machines={paginatedMachines} center={mapCenter} zoom={district ? 12 : 10} height="100%" />
                   </div>
                   <div className="results-list" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)', paddingRight: 4 }}>
                     {machines.length === 0 ? (
                       <div className="empty-state"><div className="ico">🔍</div>Không tìm thấy máy phù hợp.</div>
                     ) : (
-                      machines.map((m) => <MachineRow key={m._id} machine={m} compact={true} />)
+                      paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} compact={true} />)
                     )}
                   </div>
                 </div>
@@ -209,8 +222,75 @@ export default function Search() {
                   {machines.length === 0 ? (
                     <div className="empty-state"><div className="ico">🔍</div>Không tìm thấy máy phù hợp. Hãy thử đổi bộ lọc.</div>
                   ) : (
-                    machines.map((m) => <MachineRow key={m._id} machine={m} />)
+                    paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} />)
                   )}
+                </div>
+              )}
+
+              {/* Thanh Phân Trang - Movie Site Style Pagination Bar [1] [2] [3] [4] [5] */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 10,
+                  marginTop: 24,
+                  padding: '16px 20px',
+                  background: 'var(--bg-card)',
+                  borderRadius: 14,
+                  border: '1px solid var(--line)',
+                }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      disabled={page === 1}
+                      onClick={() => {
+                        setPage((p) => Math.max(1, p - 1));
+                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                      }}
+                    >
+                      « Trước
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        className={`btn btn-sm ${page === pageNum ? 'btn-primary' : 'btn-outline'}`}
+                        style={{
+                          minWidth: 38,
+                          height: 38,
+                          borderRadius: 8,
+                          fontSize: 14,
+                          fontWeight: page === pageNum ? 'bold' : 'normal',
+                          boxShadow: page === pageNum ? '0 3px 8px rgba(232, 172, 31, 0.35)' : 'none',
+                        }}
+                        onClick={() => {
+                          setPage(pageNum);
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      disabled={page === totalPages}
+                      onClick={() => {
+                        setPage((p) => Math.min(totalPages, p + 1));
+                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                      }}
+                    >
+                      Sau »
+                    </button>
+                  </div>
+
+                  <span className="small" style={{ opacity: 0.85, color: 'var(--muted)' }}>
+                    Hiển thị <b>{startIndex + 1}</b> - <b>{Math.min(startIndex + ITEMS_PER_PAGE, machines.length)}</b> trong tổng số <b>{machines.length}</b> máy nông nghiệp
+                  </span>
                 </div>
               )}
             </>
@@ -224,13 +304,22 @@ export default function Search() {
 // Component render 1 dòng máy nông nghiệp
 function MachineRow({ machine: m, compact = false }) {
   const cat = m.category_id || {};
+  const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
+  const isUnsplashDefault = m.image_url && m.image_url.includes('unsplash.com');
+  const imgSrc = (!m.image_url || isUnsplashDefault) ? fallbackImg : m.image_url;
+
   return (
-    <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''}`}>
+    <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''} reveal`}>
       <div className="thumb">
-        {m.image_url ? <img src={m.image_url} alt={m.name} /> : categoryIcon(cat.slug)}
+        <img
+          src={imgSrc}
+          alt={m.name}
+          loading="lazy"
+          onError={(e) => { e.target.onerror = null; e.target.src = fallbackImg; }}
+        />
       </div>
       <div className="mid">
-        <div className="cat">{cat.name}</div>
+        <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
         <h3>{m.name}</h3>
         <div className="loc">📍 {m.district}{m.address_detail ? ' · ' + m.address_detail : ''}</div>
         {!compact && <div className="desc">{(m.description || '').slice(0, 110)}...</div>}

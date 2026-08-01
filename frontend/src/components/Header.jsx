@@ -14,7 +14,17 @@ export default function Header() {
       </div>
       <header className="header">
         <div className="container">
-          <Link to="/" className="logo"><span className="mark">A</span>AGRIGO</Link>
+          <Link to="/" className="logo" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 'none', background: 'transparent' }}>
+            <img
+              src="/logo.png"
+              alt="AGRIGO Logo"
+              style={{
+                height: 48,
+                objectFit: 'contain',
+                background: 'transparent',
+              }}
+            />
+          </Link>
           <nav className="nav-links">
             <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>Trang chủ</NavLink>
             <NavLink to="/search" className={({ isActive }) => isActive ? 'active' : ''}>Tìm máy</NavLink>

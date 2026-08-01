@@ -1,7 +1,7 @@
 // src/api.js
 // Wrapper goi API backend, tu dong gan Bearer token neu da dang nhap
 
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(path, { method = 'GET', body, token } = {}) {
   const headers = {};
