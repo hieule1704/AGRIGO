@@ -52,6 +52,10 @@ export default function MachineDetail() {
   const cat = machine.category_id || {};
   const numDays = calcDays(form.start_date, form.end_date);
 
+  const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80';
+  const isUnsplashDefault = machine.image_url && machine.image_url.includes('unsplash.com');
+  const detailImgSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : machine.image_url;
+
   return (
     <div className="container" style={{ paddingTop: 26 }}>
       <div className="detail-grid">
@@ -64,13 +68,13 @@ export default function MachineDetail() {
           */}
           <div className="detail-gallery">
             <img
-              src={machine.image_url || CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80'}
+              src={detailImgSrc}
               alt={machine.name}
-              onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80'; }}
+              onError={(e) => { e.target.onerror = null; e.target.src = fallbackImg; }}
             />
           </div>
           <div style={{ marginTop: 20 }}>
-            <div className="cat">{cat.name}</div>
+            <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
             <h1 style={{ fontSize: 26, margin: '6px 0' }}>{machine.name}</h1>
             <div className="loc">📍 {machine.district}{machine.address_detail ? ' · ' + machine.address_detail : ''}</div>
             <div className="rating" style={{ marginTop: 8 }}>

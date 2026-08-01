@@ -72,6 +72,15 @@ async function seedData() {
     district: "Tri Tôn",
   });
 
+  const CATEGORY_PLACEHOLDERS = {
+    'may-cay': 'https://img.websosanh.vn/v10/users/keydes/images/hhctben04tx32/may-cay-trung-quoc.jpg?w=800&auto=format&fit=crop&q=80',
+    'may-gat': 'https://www.kubota.com/innovation/evolution/agriculture/detail/img/img_2010_main.jpg?w=800&auto=format&fit=crop&q=80',
+    'may-cay-lua': 'https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lff8yrb3qiroc8?w=800&auto=format&fit=crop&q=80',
+    'drone-phun-thuoc': 'https://thapxanh.com/images/thumbs/0038133_drone-phun-thuoc-sau-xlp450-may-bay-phun-thuoc-sau-dieu-khien-tu-xa_510.jpeg?w=800&auto=format&fit=crop&q=80',
+    'may-say': 'https://i.ytimg.com/vi/4vP1ykKNG60/maxresdefault.jpg?w=800&auto=format&fit=crop&q=80',
+    'may-xoi-dat': 'https://www.thietbim5s.vn/upload/images/may-xoi-dat-mini.jpg?w=800&auto=format&fit=crop&q=80',
+  };
+
   console.log("🌱 Tạo máy nông nghiệp mẫu...");
   const sampleMachines = [
     {
@@ -81,7 +90,7 @@ async function seedData() {
       price: 1200000,
       brand: "Kubota",
       year: 2021,
-      image_url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-cay'],
     },
     {
       name: "Máy gặt đập liên hợp Yanmar AG1100",
@@ -90,7 +99,7 @@ async function seedData() {
       price: 2500000,
       brand: "Yanmar",
       year: 2020,
-      image_url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-gat'],
     },
     {
       name: "Máy cấy lúa Kubota SPW-48C",
@@ -99,7 +108,7 @@ async function seedData() {
       price: 900000,
       brand: "Kubota",
       year: 2022,
-      image_url: "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-cay-lua'],
     },
     {
       name: "Drone phun thuốc DJI Agras T30",
@@ -108,7 +117,7 @@ async function seedData() {
       price: 700000,
       brand: "DJI",
       year: 2023,
-      image_url: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['drone-phun-thuoc'],
     },
     {
       name: "Máy sấy lúa tĩnh vỉ ngang 8 tấn",
@@ -117,7 +126,7 @@ async function seedData() {
       price: 1800000,
       brand: "Việt Nam",
       year: 2019,
-      image_url: "https://images.unsplash.com/photo-1595246140625-573b715d11dc?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-say'],
     },
     {
       name: "Máy xới đất Kubota RX",
@@ -126,7 +135,7 @@ async function seedData() {
       price: 600000,
       brand: "Kubota",
       year: 2020,
-      image_url: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-xoi-dat'],
     },
     {
       name: "Máy cày John Deere 5410",
@@ -135,7 +144,7 @@ async function seedData() {
       price: 1500000,
       brand: "John Deere",
       year: 2022,
-      image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-cay'],
     },
     {
       name: "Máy gặt Kubota DC70",
@@ -144,7 +153,7 @@ async function seedData() {
       price: 2300000,
       brand: "Kubota",
       year: 2021,
-      image_url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop&q=80",
+      image_url: CATEGORY_PLACEHOLDERS['may-gat'],
     },
   ];
 

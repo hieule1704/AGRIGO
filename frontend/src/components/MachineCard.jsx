@@ -21,21 +21,43 @@ export function formatDate(d) {
 }
 
 export const CATEGORY_PLACEHOLDERS = {
-  'may-cay': 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80',
-  'may-gat': 'https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop&q=80',
-  'may-cay-lua': 'https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=800&auto=format&fit=crop&q=80',
-  'drone-phun-thuoc': 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80',
-  'may-say': 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?w=800&auto=format&fit=crop&q=80',
-  'may-xoi-dat': 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80',
+  'may-cay': 'https://img.websosanh.vn/v10/users/keydes/images/hhctben04tx32/may-cay-trung-quoc.jpg?w=800&auto=format&fit=crop&q=80',
+  'may-gat': 'https://www.kubota.com/innovation/evolution/agriculture/detail/img/img_2010_main.jpg?w=800&auto=format&fit=crop&q=80',
+  'may-cay-lua': 'https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lff8yrb3qiroc8?w=800&auto=format&fit=crop&q=80',
+  'drone-phun-thuoc': 'https://thapxanh.com/images/thumbs/0038133_drone-phun-thuoc-sau-xlp450-may-bay-phun-thuoc-sau-dieu-khien-tu-xa_510.jpeg?w=800&auto=format&fit=crop&q=80',
+  'may-say': 'https://i.ytimg.com/vi/4vP1ykKNG60/maxresdefault.jpg?w=800&auto=format&fit=crop&q=80',
+  'may-xoi-dat': 'https://www.thietbim5s.vn/upload/images/may-xoi-dat-mini.jpg?w=800&auto=format&fit=crop&q=80',
 };
 
 export default function MachineCard({ machine }) {
   const cat = machine.category_id || {};
-  const imgSrc = machine.image_url || CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
+  const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
+  const isUnsplashDefault = machine.image_url && machine.image_url.includes('unsplash.com');
+  const imgSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : machine.image_url;
 
   return (
     <Link to={`/machine/${machine._id}`} className="machine-card">
-      <div className="thumb">
+      <div className="thumb" style={{ position: 'relative' }}>
+        {/* Category Icon Badge Overlay */}
+        <span style={{
+          position: 'absolute',
+          top: 10,
+          left: 10,
+          background: 'rgba(21, 58, 46, 0.85)',
+          color: '#fff',
+          padding: '4px 10px',
+          borderRadius: '999px',
+          fontSize: 12,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          backdropFilter: 'blur(4px)',
+          fontWeight: 'bold',
+          zIndex: 2,
+        }}>
+          {categoryIcon(cat.slug)} {cat.name || 'Nông nghiệp'}
+        </span>
+
         {machine.rating_count > 0 && (
           <span className="badge badge-gold">★ {Number(machine.rating_avg).toFixed(1)}</span>
         )}
@@ -49,11 +71,11 @@ export default function MachineCard({ machine }) {
           src={imgSrc}
           alt={machine.name}
           loading="lazy"
-          onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80'; }}
+          onError={(e) => { e.target.onerror = null; e.target.src = fallbackImg; }}
         />
       </div>
       <div className="body">
-        <div className="cat">{cat.name}</div>
+        <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
         <h3>{machine.name}</h3>
         <div className="loc">📍 {machine.district}</div>
         <div className="price-row">
