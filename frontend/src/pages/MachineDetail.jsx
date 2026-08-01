@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { categoryIcon, formatVND, formatDate } from '../components/MachineCard';
+import { categoryIcon, formatVND, formatDate, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
 
 export default function MachineDetail() {
@@ -56,8 +56,18 @@ export default function MachineDetail() {
     <div className="container" style={{ paddingTop: 26 }}>
       <div className="detail-grid">
         <div>
+          {/* 
+            📸 [HƯỚNG DẪN CHỌN ẢNH DETAIL GALLERY (.detail-gallery)]:
+            - Tỉ lệ khung hình: 16:9 (khuyến nghị kích thước ~1600x900px cho màn Retina 2x).
+            - Định dạng: WebP / JPEG (nén dung lượng 150-300KB qua Squoosh.app).
+            - Ghi chú: Ảnh chụp thực tế rõ nét nhất của máy nông nghiệp đang phục vụ ruộng lúa.
+          */}
           <div className="detail-gallery">
-            {machine.image_url ? <img src={machine.image_url} /> : categoryIcon(cat.slug)}
+            <img
+              src={machine.image_url || CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80'}
+              alt={machine.name}
+              onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80'; }}
+            />
           </div>
           <div style={{ marginTop: 20 }}>
             <div className="cat">{cat.name}</div>
@@ -89,13 +99,27 @@ export default function MachineDetail() {
             </div>
           )}
 
+          {/* 
+            📸 [HƯỚNG DẪN CHỌN ẢNH AVATAR CHỦ MÁY / USER]:
+            - Tỉ lệ: 1:1 vuông (~200x200px), hiển thị crop tròn.
+            - Định dạng: WebP / PNG / JPEG (<50KB).
+          */}
           <div className="card-box">
-            <h3>Chủ máy</h3>
+            <h3>Thông tin Chủ máy</h3>
             {owner ? (
-              <>
-                <p><b>{owner.full_name}</b></p>
-                <p className="small">📍 {owner.district || 'Chưa cập nhật'} · 📞 {owner.phone || 'Ẩn'}</p>
-              </>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--green-mid)', flexShrink: 0 }}>
+                  {owner.avatar_url ? (
+                    <img src={owner.avatar_url} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/48?text=U'; }} />
+                  ) : (
+                    <span style={{ fontSize: 24 }}>👤</span>
+                  )}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 'bold' }}>{owner.full_name}</p>
+                  <p className="small" style={{ margin: '2px 0 0' }}>📍 {owner.district || 'Chưa cập nhật'} · 📞 {owner.phone || 'Ẩn'}</p>
+                </div>
+              </div>
             ) : <p className="small">Không có thông tin chủ máy.</p>}
           </div>
 

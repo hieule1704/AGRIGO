@@ -81,6 +81,7 @@ async function seedData() {
       price: 1200000,
       brand: "Kubota",
       year: 2021,
+      image_url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy gặt đập liên hợp Yanmar AG1100",
@@ -89,6 +90,7 @@ async function seedData() {
       price: 2500000,
       brand: "Yanmar",
       year: 2020,
+      image_url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy cấy lúa Kubota SPW-48C",
@@ -97,6 +99,7 @@ async function seedData() {
       price: 900000,
       brand: "Kubota",
       year: 2022,
+      image_url: "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Drone phun thuốc DJI Agras T30",
@@ -105,6 +108,7 @@ async function seedData() {
       price: 700000,
       brand: "DJI",
       year: 2023,
+      image_url: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy sấy lúa tĩnh vỉ ngang 8 tấn",
@@ -113,6 +117,7 @@ async function seedData() {
       price: 1800000,
       brand: "Việt Nam",
       year: 2019,
+      image_url: "https://images.unsplash.com/photo-1595246140625-573b715d11dc?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy xới đất Kubota RX",
@@ -121,6 +126,7 @@ async function seedData() {
       price: 600000,
       brand: "Kubota",
       year: 2020,
+      image_url: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy cày John Deere 5410",
@@ -129,6 +135,7 @@ async function seedData() {
       price: 1500000,
       brand: "John Deere",
       year: 2022,
+      image_url: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80",
     },
     {
       name: "Máy gặt Kubota DC70",
@@ -137,6 +144,7 @@ async function seedData() {
       price: 2300000,
       brand: "Kubota",
       year: 2021,
+      image_url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop&q=80",
     },
   ];
 
@@ -175,6 +183,7 @@ const DISTRICT_COORDS = {
       address_detail: `Ấp 1, xã ${district}`,
       lat,
       lng,
+      image_url: m.image_url,
       status: "approved",
       rating_avg: (3.5 + Math.random() * 1.5).toFixed(1),
       rating_count: Math.floor(Math.random() * 20) + 1,

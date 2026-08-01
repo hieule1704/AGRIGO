@@ -33,8 +33,13 @@ export default function Home() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="hero">
+      {/* 
+        📸 [HƯỚNG DẪN CHỌN ẢNH HERO BANNER TRANG CHỦ]:
+        - Tỉ lệ khung hình: ~2.4:1 (khuyến nghị kích thước ~1920x800px cho màn Retina 2x).
+        - Định dạng: WebP / JPEG (nén dung lượng <400KB qua Squoosh.app hoặc TinyPNG).
+        - Ghi chú: Ảnh nền cảnh đồng lúa An Giang hoặc máy cày/máy gặt. Phủ lớp overlay tối để chữ trắng giữ độ tương phản.
+      */}
+      <section className="hero" style={{ background: `linear-gradient(rgba(21,58,46,0.82), rgba(31,92,69,0.88)), url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1920&auto=format&fit=crop&q=80') center/cover` }}>
         <div className="container hero-inner">
           <span className="eyebrow">🌾 Nền tảng kết nối máy nông nghiệp #1 khu vực ĐBSCL</span>
           <h1>Thuê máy cày, máy gặt, drone phun thuốc — chỉ trong vài phút</h1>
@@ -72,6 +77,11 @@ export default function Home() {
 
       {/* Danh mục loại máy */}
       <div className="container">
+        {/* 
+          📸 [HƯỚNG DẪN CHỌN ICON/ẢNH DANH MỤC (.cat-card .ico)]:
+          - Tỉ lệ: 1:1 vuông (khuyến nghị ~96x96px cho Retina 2x).
+          - Định dạng: PNG (nền trong suốt) hoặc Emoji icon 46px.
+        */}
         <div className="cat-grid">
           {categories.map((c) => (
             <Link key={c._id} to={`/search?category=${c._id}`} className="cat-card">
@@ -163,7 +173,12 @@ export default function Home() {
       {/* Banner kêu gọi Chủ máy đăng ký */}
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
-          <div className="cta-banner">
+          {/* 
+            📸 [HƯỚNG DẪN CHỌN ẢNH CTA BANNER]:
+            - Tỉ lệ: 16:9 hoặc 2.4:1 (~1600x600px).
+            - Định dạng: WebP / JPEG (nén <250KB qua Squoosh.app).
+          */}
+          <div className="cta-banner" style={{ background: `linear-gradient(rgba(21,58,46,0.85), rgba(21,58,46,0.85)), url('https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80') center/cover` }}>
             <div>
               <h2>Bạn đang sở hữu máy cày, máy gặt hoặc drone?</h2>
               <p>Gia nhập mạng lưới AGRIGO để tăng 40% doanh thu mùa vụ và tối ưu hóa lịch làm việc cho thiết bị của bạn.</p>

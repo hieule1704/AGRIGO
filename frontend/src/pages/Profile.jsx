@@ -57,6 +57,11 @@ export default function Profile() {
         {err && <div className="alert alert-error">{err}</div>}
         {ok && <div className="alert alert-success">{ok}</div>}
 
+        {/* 
+          📸 [HƯỚNG DẪN CHỌN ẢNH AVATAR USER]:
+          - Tỉ lệ: 1:1 vuông (khuyến nghị ~200x200px cho Retina 2x).
+          - Định dạng: WebP / JPEG / PNG (<50KB), hiển thị crop tròn.
+        */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--line)' }}>
           <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--green-mid)', flexShrink: 0 }}>
             {form.avatar_url ? (
