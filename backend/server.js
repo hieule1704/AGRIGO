@@ -13,6 +13,7 @@ const machineRoutes = require("./src/routes/machine.routes");
 const bookingRoutes = require("./src/routes/booking.routes");
 const adminRoutes = require("./src/routes/admin.routes");
 const uploadRoutes = require("./src/routes/upload.routes");
+const aiRoutes = require("./src/routes/ai.routes");
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
@@ -35,6 +36,7 @@ app.get("/", (req, res) => {
       bookings: "/api/bookings",
       admin: "/api/admin",
       upload: "/api/upload",
+      ai: "/api/ai",
     },
   });
 });
@@ -49,6 +51,7 @@ app.use("/api/machines", machineRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Trinh loi chung
 app.use((err, req, res, next) => {

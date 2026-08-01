@@ -1,12 +1,22 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 
 function signToken(user) {
   return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
+
+// Rate limiter cho dang nhap - gioi han 10 lan trong 15 phut
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 15 phút.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -40,7 +50,7 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: (email || '').toLowerCase() });
@@ -60,6 +70,23 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req, res) => {
   res.json({ user: req.user.toSafeJSON() });
+});
+
+// PUT /api/auth/profile (Cap nhat ho so & avatar)
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const { full_name, phone, district, address, avatar_url } = req.body;
+    const user = req.user;
+    if (full_name !== undefined) user.full_name = full_name;
+    if (phone !== undefined) user.phone = phone;
+    if (district !== undefined) user.district = district;
+    if (address !== undefined) user.address = address;
+    if (avatar_url !== undefined) user.avatar_url = avatar_url;
+    await user.save();
+    res.json({ user: user.toSafeJSON() });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi cập nhật hồ sơ.', detail: err.message });
+  }
 });
 
 module.exports = router;

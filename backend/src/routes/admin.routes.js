@@ -60,8 +60,15 @@ router.get('/users', async (req, res) => {
 router.patch('/users/:id/status', async (req, res) => {
   const { status } = req.body;
   if (!['active', 'locked'].includes(status)) return res.status(400).json({ error: 'Trạng thái không hợp lệ.' });
-  const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true }).select('-password_hash');
-  if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+  const targetUser = await User.findById(req.params.id);
+  if (!targetUser) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+  if (targetUser.role === 'admin') {
+    return res.status(403).json({ error: 'Không thể thay đổi trạng thái tài khoản có quyền Admin.' });
+  }
+  targetUser.status = status;
+  await targetUser.save();
+  const user = targetUser.toObject();
+  delete user.password_hash;
   res.json({ user });
 });
 

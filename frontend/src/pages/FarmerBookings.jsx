@@ -45,7 +45,7 @@ export default function FarmerBookings() {
               <td>{formatVND(b.total_price)}</td>
               <td><StatusPill status={b.status} /></td>
               <td>
-                {b.status === 'pending' && <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>}
+                {(b.status === 'pending' || b.status === 'accepted') && <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>}
                 {b.status === 'completed' && <button className="btn btn-outline btn-sm" onClick={() => setReviewFor(b._id)}>Đánh giá</button>}
               </td>
             </tr>

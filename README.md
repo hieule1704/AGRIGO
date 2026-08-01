@@ -1,98 +1,105 @@
-# AGRIGO — Demo MERN Stack
+# AGRIGO — Nền Tảng Kết Nối Máy Nông Nghiệp MERN Stack (Tích hợp AI & Bản Đồ)
 
-Nền tảng kết nối máy nông nghiệp (máy cày, máy gặt, drone phun thuốc...) giữa nông dân và chủ máy.
-Giao diện lấy cảm hứng bố cục kiểu **Klook/Rentalcars** (hero search + danh sách + trang chi tiết + đặt lịch).
+**AGRIGO** là hệ thống MERN Stack hiện đại kết nối chủ máy nông nghiệp (máy cày, máy gặt đập liên hợp, drone phun thuốc, xe tuốt...) với bà con nông dân khu vực An Giang & Đồng bằng sông Cửu Long.
 
-Stack: **MongoDB (in-memory cho demo) + Express + React (Vite) + Node.js**
+Giao diện được thiết kế theo phong cách Klook / Rentalcars (Hero Search + Trợ lý AI + Bản đồ tương tác Leaflet + Quản lý lịch chống double-booking).
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
+
+* **Backend**: Node.js, Express.js, MongoDB (hỗ trợ In-Memory DB tự động & Atlas), Mongoose, BCrypt, JWT, Express Rate Limit, Multer.
+* **Frontend**: React.js (Vite), React Router v6, Leaflet Maps (`react-leaflet`), CSS Design System tailored.
+* **AI Engine**: Google AI Studio Gemini API (`gemini-1.5-flash`) tích hợp **Hệ thống Dự phòng (Fallback Mechanism)** chống quá tải token 100%.
 
 ```
 agrigo-mern/
-├── backend/     ← Express API + Mongoose models
-└── frontend/    ← React (Vite) — giao diện Nông dân/Chủ máy + trang Admin
+├── backend/     ← Express API Server (Routes: Auth, Machines, Bookings, Admin, Upload, AI)
+└── frontend/    ← React (Vite) App (Pages: Search, Detail, Owner, Farmer, Admin, Profile)
 ```
 
-## 0. Yêu cầu
+---
 
-- Node.js **≥ 18** (khuyến nghị 20+) đã cài trên máy bạn
-- Có kết nối Internet **1 lần duy nhất** để `npm install` (tải Express, React, MongoDB in-memory server...)
-- Không cần cài MongoDB — bản demo tự chạy MongoDB tạm trong RAM
+## 🚀 1. Hướng Dẫn Cài Đặt & Khởi Chạy
 
-## 1. Cài đặt & chạy Backend (API)
+### Yêu cầu hệ thống:
+- **Node.js**: phiên bản ≥ 18 (khuyến nghị 20+)
+- **Nguồn dữ liệu**: Mặc định bản demo dùng MongoDB In-Memory (chạy trực tiếp trong RAM, không cần cài MongoDB).
 
+### Bước 1: Khởi chạy Backend (API Server - Cổng 5000)
 ```bash
 cd backend
 npm install
-cp .env.example .env
-npm run seed      # tạo dữ liệu mẫu: danh mục, tài khoản, máy nông nghiệp...
-npm run dev        # chạy API tại http://localhost:5000
+npm run seed      # Khởi tạo dữ liệu mẫu: Danh mục, Tài khoản demo, Máy nông nghiệp
+npm run dev        # Chạy Backend Server tại http://localhost:5000
 ```
+*Ghi chú*: Biến `GEMINI_API_KEY` đã được cấu hình sẵn trong `backend/.env`.
 
-Bạn sẽ thấy log dạng:
-```
-⚡ Đang dùng MongoDB In-Memory (chỉ để demo, dữ liệu sẽ mất khi tắt server).
-✅ Đã kết nối MongoDB: ...
-🚀 AGRIGO API đang chạy tại http://localhost:5000
-```
-
-> Lưu ý: vì dùng MongoDB In-Memory, **mỗi lần tắt server dữ liệu sẽ mất** — chạy lại `npm run seed` rồi `npm run dev`.
-> Muốn dữ liệu lưu lại lâu dài: tạo cluster free tại [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register), dán connection string vào biến `MONGO_URI` trong file `.env`, rồi chạy lại `npm run seed` + `npm run dev`.
-
-## 2. Cài đặt & chạy Frontend (giao diện)
-
-Mở terminal thứ 2:
-
+### Bước 2: Khởi chạy Frontend (Giao diện - Cổng 5173)
+Mở terminal thứ hai:
 ```bash
 cd frontend
 npm install
-npm run dev         # chạy giao diện tại http://localhost:5173
+npm run dev        # Chạy Frontend tại http://localhost:5173
 ```
+👉 **Mở trình duyệt truy cập: http://localhost:5173**
 
-Mở trình duyệt: **http://localhost:5173**
-
-Frontend đã cấu hình sẵn proxy `/api` → `http://localhost:5000` (xem `vite.config.js`), nên không cần chỉnh gì thêm.
-
-## 3. Tài khoản demo (mật khẩu chung: `123456`)
-
-| Vai trò | Email |
-|---|---|
-| Nông dân | farmer@agrigo.vn |
-| Chủ máy | owner@agrigo.vn (hoặc owner2@agrigo.vn) |
-| Quản trị viên | admin@agrigo.vn |
-
-## 4. Luồng demo gợi ý
-
-1. Vào trang chủ → tìm máy theo khu vực/loại máy → xem chi tiết máy.
-2. Đăng nhập bằng `farmer@agrigo.vn` → đặt lịch thuê 1 máy.
-3. Đăng nhập bằng `owner@agrigo.vn` → vào **Kênh chủ máy** → tab **Đơn đặt lịch** → **Nhận đơn** → **Đánh dấu hoàn tất**.
-4. Quay lại tài khoản farmer → **Lịch thuê của tôi** → **Đánh giá** đơn đã hoàn tất.
-5. Đăng nhập bằng `admin@agrigo.vn` → vào **Trang quản trị**:
-   - Tab **Duyệt máy**: duyệt/từ chối máy mới đăng (có sẵn 1 máy "chờ duyệt" trong dữ liệu mẫu).
-   - Tab **Người dùng**: khóa/mở khóa tài khoản.
-   - Tab **Đơn đặt lịch**: xem toàn bộ giao dịch + hoa hồng nền tảng (5%).
-
-## 5. Cấu trúc dữ liệu (MongoDB, dễ tùy biến sau này)
-
-- **User**: `full_name, email, password_hash, phone, role(farmer/owner/admin), district, status`
-- **Category**: `name, slug, icon` — danh mục loại máy
-- **Machine**: `owner_id, category_id, name, price_per_day, district, status(pending/approved/rejected/hidden), rating_avg, schedule[]`
-- **Booking**: `machine_id, farmer_id, owner_id, start_date, end_date, total_price, commission_amount, status`
-- **Review**: `booking_id, machine_id, farmer_id, rating, comment`
-
-Muốn thêm trường (VD: ảnh nhiều tấm, loại nhiên liệu, diện tích tối thiểu...) chỉ cần sửa file model tương ứng trong `backend/src/models/` — không cần đụng vào phần còn lại.
-
-## 6. Lưu trữ & Quản lý Hình ảnh (Local Storage & Direct URL)
-
-Hệ thống được thiết kế lưu trữ hình ảnh hoàn toàn linh hoạt mà **không bắt buộc dùng dịch vụ Cloud bên thứ 3**:
-
-- **📁 Tải ảnh Local (Multer)**: Khi Chủ máy (Owner) chọn file từ máy tính, ảnh sẽ được tự động lưu vào thư mục `backend/uploads/` và được Express phục vụ qua đường dẫn tĩnh `/uploads/filename.jpg`.
-- **🔗 Dán đường dẫn trực tiếp (Direct URL)**: Hỗ trợ dán link ảnh từ bất kỳ nguồn online nào (hoặc link ảnh máy tính).
-- **👁 Xem trước ảnh (Image Preview)**: Giao diện hiển thị tức thì xem trước hình ảnh trước khi lưu.
-- **🛡 Admin xem duyệt**: Trang Quản trị (Admin) hiển thị ảnh thu nhỏ của các máy đang chờ duyệt giúp công tác kiểm duyệt trực quan.
-
-## 7. Các bước mở rộng tiếp theo
-
-- Thêm bản đồ (Leaflet/OpenStreetMap) vào trang tìm kiếm bằng cách dùng field `lat/lng` đã có sẵn trong model `Machine`.
-- Deploy miễn phí gợi ý: **Backend** → Render.com / Railway (free tier) + MongoDB Atlas free; **Frontend** → Vercel/Netlify (build lệnh `npm run build`, thư mục `dist`).
+*(Vite đã cấu hình proxy tự động cho các request `/api` và `/uploads` sang cổng 5000)*.
 
 ---
-*Đây là sản phẩm demo phục vụ trình bày nội bộ — dữ liệu, thanh toán là mô phỏng.*
+
+## 🔑 2. Tài Khoản Demo (Mật khẩu chung: `123456`)
+
+| Vai trò | Email | Quyền hạn & Chức năng |
+|---|---|---|
+| **Nông dân** | `farmer@agrigo.vn` | Tìm máy bằng AI / Bản đồ, xem tạm tính giá, đặt lịch thuê, hủy đơn, đánh giá |
+| **Chủ máy** | `owner@agrigo.vn` *(hoặc owner2@agrigo.vn)* | Đăng máy mới (Ghim vị trí bản đồ + AI viết mô tả), nhận/hủy đơn thuê, cập nhật lịch bận |
+| **Quản trị viên** | `admin@agrigo.vn` | Duyệt bài đăng với **AI Check**, tóm tắt insight đánh giá, quản lý người dùng & doanh thu |
+
+---
+
+## 🔄 3. Workflow & Tính Năng Nổi Bật
+
+### 🤖 1. Tích Hợp AI Agent (Google Gemini API + Smart Fallback)
+- **Trợ lý Tìm máy Ngôn ngữ tự nhiên**: Nông dân gõ câu hỏi (*"Cần máy gặt ở Thoại Sơn"*), AI tự bóc tách `huyện` & `loại máy` để lọc kết quả.
+- **✨ Viết mô tả bằng AI**: Chủ máy chỉ cần điền tên máy, AI tự động sinh đoạn mô tả chuyên nghiệp, thân thiện.
+- **🛡️ AI Content Moderation**: Admin kiểm duyệt bài đăng mới với 1-click **"AI Check"** để chấm điểm an toàn (0-100) và nhận biết nội dung rác.
+- **Tóm tắt Đánh giá**: AI tổng hợp hàng loạt nhận xét của nông dân thành ưu/nhược điểm và khuyến nghị cho Admin.
+- **⚡ Chế độ Dự phòng (Fallback Mechanism)**: Khi Gemini API hết quota hoặc quá tải token, hệ thống tự động kích hoạt bộ xử lý quy tắc thông minh, đảm bảo demo 100% không bao giờ bị đứng hay treo.
+
+### 🗺️ 2. Bản Đồ Tương Tác & Ghim Vị Trí Máy (Leaflet Maps)
+- **Click-to-Pin Location Picker**: Khi đăng máy mới, chủ máy chỉ cần **click vào bất kỳ điểm nào trên bản đồ** để chọn tọa độ chính xác.
+- **Tự động đặt vị trí theo Huyện/Thị**: Khi chọn khu vực (VD: Long Xuyên, Châu Đốc...), bản đồ tự xoay đến trung tâm khu vực đó.
+- **📡 Định vị GPS hiện tại**: Tích hợp Geolocation API cho phép lấy vị trí thiết bị hiện tại chỉ với 1 click.
+
+### 📅 3. Đặt Lịch Chống Trùng Lịch (Anti-Double Booking) & Tính Tiền Realtime
+- **Trực quan Lịch bận**: Hiển thị các ngày máy đã có lịch bận (`booked`/`blocked`) ngay trên trang chi tiết máy.
+- **Tạm tính tiền tự động**: Tự động tính toán số ngày thuê và hiển thị tổng tiền `(Số ngày × Giá/ngày)` theo thời gian thực.
+- **Kiểm soát Xung đột**: Chặn double-booking ở cả Frontend lẫn Backend khi chủ máy bấm "Nhận đơn".
+- **Hủy đơn & Giải phóng Lịch**: Cho phép Hủy đơn cả khi đơn ở trạng thái `accepted`, tự động giải phóng các ngày bận khỏi lịch máy.
+
+### 👤 4. Hồ Sơ Cá Nhân & Bảo Mật Nâng Cao
+- **Quản lý Hồ sơ (`/profile`)**: Cập nhật thông tin cá nhân và ảnh đại diện Avatar (hỗ trợ file upload local hoặc đường dẫn URL Cloud).
+- **Chống Brute-force**: Giới hạn số lần thử đăng nhập sai (`express-rate-limit`) bảo vệ hệ thống.
+- **Chặn khóa Admin**: Backend tự động chặn các hành vi khóa tài khoản Quản trị viên qua API.
+
+---
+
+## 🗄️ 4. Cấu Trúc Dữ Liệu Chính (Mongoose Schema)
+
+- **User**: `full_name, email, password_hash, phone, role(farmer/owner/admin), district, address, avatar_url, status(active/locked)`
+- **Category**: `name, slug, icon`
+- **Machine**: `owner_id, category_id, name, description, brand, year_made, price_per_day, price_unit, district, address_detail, lat, lng, image_url, status(pending/approved/rejected/hidden), rating_avg, rating_count, schedule[{date, status}]`
+- **Booking**: `machine_id, farmer_id, owner_id, start_date, end_date, days, price_per_day, total_price, commission_rate, commission_amount, status(pending/accepted/rejected/completed/cancelled)`
+- **Review**: `booking_id, machine_id, farmer_id, rating, comment`
+
+---
+
+## 🖼️ 5. Quản Lý Hình Ảnh (Dev & Production)
+
+- **Môi trường Dev/Local**: Ảnh upload qua Multer lưu tại `backend/uploads/` và được phục vụ qua đường dẫn tĩnh `/uploads/filename.jpg`. Vite Frontend đã proxy sẵn `/uploads` → backend port 5000.
+- **Môi trường Production (Render/Railway/Vercel)**: Hệ thống đã sẵn sàng hỗ trợ Cloudinary / Direct URL giúp lưu trữ vĩnh viễn không bị xóa khi server tái khởi động.
+
+---
+
+*AGRIGO MERN Stack — Dự án Demo Nền Tảng Cho Thuê Máy Nông Nghiệp Thông Minh.*

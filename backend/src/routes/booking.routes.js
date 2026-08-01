@@ -29,6 +29,9 @@ router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
       return res.status(404).json({ error: 'Máy không tồn tại hoặc chưa được duyệt.' });
     }
 
+    if (new Date(start_date) > new Date(end_date)) {
+      return res.status(400).json({ error: 'Ngày kết thúc phải từ hoặc sau ngày bắt đầu.' });
+    }
     const days = dateRange(start_date, end_date);
     if (days.length < 1) return res.status(400).json({ error: 'Khoảng ngày không hợp lệ.' });
 
@@ -78,7 +81,7 @@ router.get('/owner', requireAuth, requireRole('owner'), async (req, res) => {
   res.json({ bookings });
 });
 
-// PATCH /api/bookings/:id/status  (chu may: accepted/rejected/completed | nong dan: cancelled)
+// PATCH /api/bookings/:id/status  (chu may: accepted/rejected/completed/cancelled | nong dan: cancelled)
 router.patch('/:id/status', requireAuth, async (req, res) => {
   const { status } = req.body;
   const booking = await Booking.findById(req.params.id);
@@ -86,19 +89,40 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
 
   const isOwner = String(booking.owner_id) === String(req.user._id);
   const isFarmer = String(booking.farmer_id) === String(req.user._id);
+  const prevStatus = booking.status;
 
-  if (isOwner && ['accepted', 'rejected', 'completed'].includes(status)) {
-    booking.status = status;
+  if (isOwner && ['accepted', 'rejected', 'completed', 'cancelled'].includes(status)) {
     if (status === 'accepted') {
       const machine = await Machine.findById(booking.machine_id);
+      if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
       const days = dateRange(booking.start_date, booking.end_date);
-      const existing = new Set((machine.schedule || []).map((s) => s.date));
+      const busy = new Set((machine.schedule || []).filter((s) => s.status === 'booked' || s.status === 'blocked').map((s) => s.date));
+      const conflict = days.some((d) => busy.has(d));
+      if (conflict) {
+        return res.status(400).json({ error: 'Máy đã có lịch bận trong khoảng thời gian này. Không thể nhận đơn.' });
+      }
       days.forEach((d) => {
-        if (!existing.has(d)) machine.schedule.push({ date: d, status: 'booked' });
+        machine.schedule.push({ date: d, status: 'booked' });
       });
       await machine.save();
+    } else if (['cancelled', 'rejected'].includes(status) && prevStatus === 'accepted') {
+      const machine = await Machine.findById(booking.machine_id);
+      if (machine && machine.schedule) {
+        const days = new Set(dateRange(booking.start_date, booking.end_date));
+        machine.schedule = machine.schedule.filter((s) => !(days.has(s.date) && s.status === 'booked'));
+        await machine.save();
+      }
     }
-  } else if (isFarmer && status === 'cancelled' && booking.status === 'pending') {
+    booking.status = status;
+  } else if (isFarmer && status === 'cancelled' && ['pending', 'accepted'].includes(prevStatus)) {
+    if (prevStatus === 'accepted') {
+      const machine = await Machine.findById(booking.machine_id);
+      if (machine && machine.schedule) {
+        const days = new Set(dateRange(booking.start_date, booking.end_date));
+        machine.schedule = machine.schedule.filter((s) => !(days.has(s.date) && s.status === 'booked'));
+        await machine.save();
+      }
+    }
     booking.status = 'cancelled';
   } else {
     return res.status(403).json({ error: 'Bạn không thể thực hiện thao tác này trên đơn hàng.' });

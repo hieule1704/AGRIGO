@@ -19,9 +19,22 @@ export default function MachineDetail() {
   }
   useEffect(load, [id]);
 
+  function calcDays(start, end) {
+    if (!start || !end) return 0;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0;
+    const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 0;
+  }
+
   async function submitBooking(e) {
     e.preventDefault();
     setErr(''); setOk('');
+    if (new Date(form.start_date) > new Date(form.end_date)) {
+      setErr('Ngày kết thúc phải từ hoặc sau ngày bắt đầu.');
+      return;
+    }
     try {
       await api.post('/bookings', { machine_id: id, ...form });
       setOk('Đã gửi yêu cầu đặt lịch! Vui lòng chờ chủ máy xác nhận.');
@@ -37,6 +50,7 @@ export default function MachineDetail() {
 
   const { machine, owner, reviews } = data;
   const cat = machine.category_id || {};
+  const numDays = calcDays(form.start_date, form.end_date);
 
   return (
     <div className="container" style={{ paddingTop: 26 }}>
@@ -105,6 +119,21 @@ export default function MachineDetail() {
           <div className="price-big">{formatVND(machine.price_per_day)} <span className="small">/ {machine.price_unit}</span></div>
           <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '16px 0' }} />
 
+          {machine.schedule && machine.schedule.filter((s) => s.status === 'booked' || s.status === 'blocked').length > 0 && (
+            <div style={{ marginBottom: 16, background: 'var(--bg-light)', padding: 12, borderRadius: 8, fontSize: 13 }}>
+              <b style={{ color: 'var(--green-deep)' }}>📅 Lịch bận đã có của máy:</b>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                {machine.schedule
+                  .filter((s) => s.status === 'booked' || s.status === 'blocked')
+                  .map((s, idx) => (
+                    <span key={idx} style={{ background: s.status === 'blocked' ? '#718096' : 'var(--danger)', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>
+                      {s.date} {s.status === 'blocked' ? '(Khóa)' : '(Đã đặt)'}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {err && <div className="alert alert-error">{err}</div>}
           {ok && <div className="alert alert-success">{ok}</div>}
 
@@ -126,6 +155,16 @@ export default function MachineDetail() {
                 <input type="date" required min={new Date().toISOString().slice(0, 10)}
                   value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
               </div>
+
+              {numDays > 0 && (
+                <div style={{ margin: '14px 0', padding: 12, background: 'var(--bg-light)', borderRadius: 8, border: '1px dashed var(--green-mid)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>TẠM TÍNH TỔNG TIỀN:</div>
+                  <div style={{ fontSize: 16, color: 'var(--green-deep)', fontWeight: 'bold', marginTop: 4 }}>
+                    {numDays} ngày × {formatVND(machine.price_per_day)} = {formatVND(numDays * machine.price_per_day)}
+                  </div>
+                </div>
+              )}
+
               <div className="field">
                 <label>Ghi chú cho chủ máy</label>
                 <textarea placeholder="VD: 3 công ruộng, cần gặt buổi sáng"

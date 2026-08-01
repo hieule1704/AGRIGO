@@ -53,10 +53,66 @@ export default function Search() {
     setParams(next);
   }
 
+  const [aiQuery, setAiQuery] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiNote, setAiNote] = useState('');
+
+  async function handleAiSearch(e) {
+    e.preventDefault();
+    if (!aiQuery.trim()) return;
+    setAiLoading(true);
+    setAiNote('');
+    try {
+      const res = await api.post('/ai/search-assistant', { query: aiQuery });
+      if (res.result) {
+        setAiNote(res.result.summary || 'Đã phân tích yêu cầu bằng AI.');
+        const next = new URLSearchParams(params);
+        if (res.result.district) next.set('district', res.result.district);
+        if (res.result.category_keyword) {
+          const kw = res.result.category_keyword.toLowerCase();
+          const matchedCat = categories.find((c) => c.name.toLowerCase().includes(kw) || c.slug.includes(kw));
+          if (matchedCat) next.set('category', matchedCat._id);
+        }
+        setParams(next);
+      }
+    } catch (err) {
+      setAiNote('Lỗi trợ lý AI: ' + err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   const mapCenter = DISTRICT_CENTERS[district] || null;
 
   return (
     <div className="container" style={{ paddingTop: 26, paddingBottom: 40 }}>
+      {/* AI Search Assistant */}
+      <div className="card-box" style={{ marginBottom: 16, background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff' }}>
+        <form onSubmit={handleAiSearch} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 20 }}>🤖</span>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <label style={{ fontSize: 13, fontWeight: 'bold', display: 'block', marginBottom: 4, color: 'var(--gold)' }}>
+              Trợ lý AI Tìm máy (Ngôn ngữ tự nhiên)
+            </label>
+            <input
+              type="text"
+              placeholder="VD: Cần thuê máy gặt ở Thoại Sơn..."
+              value={aiQuery}
+              onChange={(e) => setAiQuery(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: 'none', outline: 'none', background: '#fff', color: '#1B211D' }}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ height: 38, marginTop: 18 }} disabled={aiLoading}>
+            {aiLoading ? 'Đang phân tích...' : '✨ Tìm bằng AI'}
+          </button>
+        </form>
+        {aiNote && (
+          <div style={{ marginTop: 10, fontSize: 13, background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: 6, display: 'inline-block' }}>
+            💡 {aiNote}
+          </div>
+        )}
+      </div>
+
       <form className="search-card" style={{ marginBottom: 20 }} onSubmit={(e) => e.preventDefault()}>
         <div className="search-field">
           <label>Khu vực</label>

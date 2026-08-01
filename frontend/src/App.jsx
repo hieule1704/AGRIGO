@@ -15,6 +15,8 @@ import About from './pages/About';
 import PricingPolicy from './pages/PricingPolicy';
 import Guide from './pages/Guide';
 
+import Profile from './pages/Profile';
+
 export default function App() {
   return (
     <>
@@ -29,6 +31,9 @@ export default function App() {
         <Route path="/pricing" element={<PricingPolicy />} />
         <Route path="/guide" element={<Guide />} />
 
+        <Route path="/profile" element={
+          <ProtectedRoute><Profile /></ProtectedRoute>
+        } />
         <Route path="/owner/*" element={
           <ProtectedRoute roles={['owner']}><OwnerDashboard /></ProtectedRoute>
         } />

@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { StatusPill } from '../components/ProtectedRoute';
 import { formatVND, formatDate } from '../components/MachineCard';
+import LocationPickerMap from '../components/LocationPickerMap';
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
@@ -12,6 +13,33 @@ export default function OwnerDashboard() {
   const [categories, setCategories] = useState([]);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
+  const [aiGenLoading, setAiGenLoading] = useState(false);
+
+  async function generateAiDescription() {
+    if (!form.name) {
+      alert('Vui lòng nhập "Tên máy" trước khi tạo mô tả tự động bằng AI.');
+      return;
+    }
+    setAiGenLoading(true);
+    try {
+      const catObj = categories.find((c) => c._id === form.category_id);
+      const res = await api.post('/ai/generate-description', {
+        name: form.name,
+        brand: form.brand,
+        year_made: form.year_made,
+        district: form.district,
+        category_name: catObj?.name || '',
+      });
+      if (res.description) {
+        setForm((prev) => ({ ...prev, description: res.description }));
+      }
+    } catch (e) {
+      alert('Lỗi tạo mô tả AI: ' + e.message);
+    } finally {
+      setAiGenLoading(false);
+    }
+  }
+
   const DISTRICT_COORDS = {
     'Long Xuyên': { lat: 10.3833, lng: 105.4167 },
     'Châu Đốc': { lat: 10.7000, lng: 105.1167 },
@@ -39,6 +67,25 @@ export default function OwnerDashboard() {
       lat: coords ? coords.lat : prev.lat,
       lng: coords ? coords.lng : prev.lng,
     }));
+  }
+
+  function getCurrentGpsLocation() {
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((prev) => ({
+          ...prev,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }));
+      },
+      (err) => {
+        alert('Không thể lấy vị trí GPS: ' + err.message);
+      }
+    );
   }
 
   function loadMachines() { api.get('/machines/mine').then((d) => setMachines(d.machines)); }
@@ -168,9 +215,33 @@ export default function OwnerDashboard() {
                     ))}
                   </select>
                 </div>
-                <div className="field"><label>Vĩ độ (Lat, tùy chọn)</label><input type="number" step="any" placeholder="10.3833" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} /></div>
-                <div className="field"><label>Kinh độ (Lng, tùy chọn)</label><input type="number" step="any" placeholder="105.4167" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} /></div>
-                <div className="field full"><label>Địa chỉ chi tiết</label><input value={form.address_detail} onChange={(e) => setForm({ ...form, address_detail: e.target.value })} /></div>
+                <div className="field full">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label style={{ margin: 0, fontWeight: 'bold' }}>📍 Vị trí đặt máy trên bản đồ (Nhấp vào bản đồ để ghim vị trí)</label>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '3px 10px', fontSize: 12, borderColor: 'var(--green-mid)', color: 'var(--green-deep)' }}
+                      onClick={getCurrentGpsLocation}
+                    >
+                      📡 Lấy vị trí GPS của tôi
+                    </button>
+                  </div>
+
+                  <LocationPickerMap
+                    position={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : null}
+                    center={form.lat && form.lng ? [Number(form.lat), Number(form.lng)] : [10.45, 105.25]}
+                    onSelectLocation={(lat, lng) => setForm((prev) => ({ ...prev, lat, lng }))}
+                    height="260px"
+                  />
+
+                  {form.lat && form.lng && (
+                    <div className="small" style={{ marginTop: 6, color: 'var(--green-deep)', fontWeight: 'bold' }}>
+                      📍 Tọa độ đã ghim: Vĩ độ (Lat): {Number(form.lat).toFixed(5)} · Kinh độ (Lng): {Number(form.lng).toFixed(5)}
+                    </div>
+                  )}
+                </div>
+                <div className="field full"><label>Địa chỉ chi tiết</label><input value={form.address_detail} onChange={(e) => setForm({ ...form, address_detail: e.target.value })} placeholder="VD: Ấp Vĩnh Phú, Xã Vĩnh Thạnh Trung" /></div>
 
                 {/* Phần chọn và lưu ảnh Local hoặc URL */}
                 <div className="field full">
@@ -232,7 +303,21 @@ export default function OwnerDashboard() {
                   )}
                 </div>
 
-                <div className="field full"><label>Mô tả</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+                <div className="field full">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label style={{ margin: 0 }}>Mô tả chi tiết</label>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '2px 10px', fontSize: 12, borderColor: 'var(--green-mid)', color: 'var(--green-deep)' }}
+                      onClick={generateAiDescription}
+                      disabled={aiGenLoading}
+                    >
+                      {aiGenLoading ? '⏳ Đang tạo mô tả...' : '✨ Viết mô tả giúp tôi (AI)'}
+                    </button>
+                  </div>
+                  <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Nhập mô tả máy hoặc bấm nút AI ở trên để tự tạo..." />
+                </div>
               </div>
               <button className="btn btn-primary" type="submit" style={{ marginTop: 8 }}>Đăng máy</button>
             </form>
@@ -260,7 +345,10 @@ export default function OwnerDashboard() {
                         </div>
                       )}
                       {b.status === 'accepted' && (
-                        <button className="btn btn-outline btn-sm" onClick={() => setBookingStatus(b._id, 'completed')}>Đánh dấu hoàn tất</button>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => setBookingStatus(b._id, 'completed')}>Đánh dấu hoàn tất</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => setBookingStatus(b._id, 'cancelled')}>Hủy đơn</button>
+                        </div>
                       )}
                     </td>
                   </tr>

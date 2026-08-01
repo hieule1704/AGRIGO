@@ -32,6 +32,21 @@ export default function AdminDashboard() {
     loadUsers();
   }
 
+  const [aiModResult, setAiModResult] = useState(null);
+  const [modLoadingId, setModLoadingId] = useState(null);
+
+  async function checkAiModerate(machine) {
+    setModLoadingId(machine._id);
+    try {
+      const res = await api.post('/ai/moderate-content', { name: machine.name, description: machine.description });
+      setAiModResult({ machineName: machine.name, ...res.result });
+    } catch (e) {
+      alert('Lỗi kiểm duyệt AI: ' + e.message);
+    } finally {
+      setModLoadingId(null);
+    }
+  }
+
   return (
     <div className="dash-shell">
       <aside className="dash-side">
@@ -90,10 +105,13 @@ export default function AdminDashboard() {
                     <td>{formatVND(m.price_per_day)}</td>
                     <td><StatusPill status={m.status} /></td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {m.status !== 'approved' && <button className="btn btn-primary btn-sm" onClick={() => setMachineStatus(m._id, 'approved')}>Duyệt</button>}
                         {m.status !== 'rejected' && <button className="btn btn-danger btn-sm" onClick={() => setMachineStatus(m._id, 'rejected')}>Từ chối</button>}
                         {m.status === 'approved' && <button className="btn btn-outline btn-sm" onClick={() => setMachineStatus(m._id, 'hidden')}>Ẩn</button>}
+                        <button className="btn btn-outline btn-sm" style={{ borderColor: 'var(--teal)', color: 'var(--teal)' }} onClick={() => checkAiModerate(m)} disabled={modLoadingId === m._id}>
+                          {modLoadingId === m._id ? '...' : '🛡️ AI Check'}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -101,6 +119,23 @@ export default function AdminDashboard() {
                 {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Không có máy nào.</td></tr>}
               </tbody>
             </table>
+
+            {aiModResult && (
+              <div style={{ marginTop: 20, padding: 16, background: 'var(--bg-light)', borderRadius: 12, border: '1px solid var(--green-mid)' }}>
+                <div className="flex-between" style={{ marginBottom: 8 }}>
+                  <b style={{ color: 'var(--green-deep)', fontSize: 16 }}>🛡️ Kết quả AI Kiểm duyệt: {aiModResult.machineName}</b>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setAiModResult(null)}>✖ Đóng</button>
+                </div>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 'bold', color: aiModResult.safe ? 'green' : 'var(--danger)' }}>
+                    Trạng thái: {aiModResult.safe ? '✅ An toàn (Cho phép đăng)' : '⚠️ Cảnh báo nghi vấn'}
+                  </span>
+                  <span className="small">Điểm an toàn: <b>{aiModResult.score}/100</b></span>
+                  {aiModResult.is_fallback && <span className="small" style={{ opacity: 0.7 }}>(Chế độ dự phòng offline)</span>}
+                </div>
+                <p className="small" style={{ margin: 0 }}><b>Khuyên dùng cho Admin:</b> {aiModResult.note}</p>
+              </div>
+            )}
           </div>
         )}
 

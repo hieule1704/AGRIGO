@@ -4,14 +4,18 @@
 const BASE = '/api';
 
 async function request(path, { method = 'GET', body, token } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {};
+  const isFormData = body instanceof FormData;
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
   const t = token || localStorage.getItem('agrigo_token');
   if (t) headers.Authorization = `Bearer ${t}`;
 
   const res = await fetch(BASE + path, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
   });
 
   let data = {};
