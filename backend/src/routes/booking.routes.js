@@ -20,7 +20,7 @@ function dateRange(start, end) {
 // POST /api/bookings  (nong dan dat lich)
 router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
   try {
-    const { machine_id, start_date, end_date, note, payment_method, payment_status } = req.body;
+    const { machine_id, start_date, end_date, note, payment_method, payment_status, selected_addons, discount_amount, is_negotiated, negotiated_price, custom_total_price } = req.body;
     if (!machine_id || !start_date || !end_date) {
       return res.status(400).json({ error: 'Vui lòng chọn máy và ngày thuê.' });
     }
@@ -41,8 +41,16 @@ router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
       return res.status(400).json({ error: 'Máy đã có lịch bận trong khoảng ngày bạn chọn. Vui lòng chọn ngày khác.' });
     }
 
-    const total_price = machine.price_per_day * days.length;
-    const commission_amount = Math.round(total_price * COMMISSION_RATE);
+    let baseRental = machine.price_per_day * days.length;
+    let addonsTotal = 0;
+    const addonsList = Array.isArray(selected_addons) ? selected_addons : [];
+    addonsList.forEach((a) => {
+      addonsTotal += (Number(a.price) || 0) * days.length;
+    });
+
+    const disc = Number(discount_amount) || 0;
+    let finalTotal = custom_total_price ? Number(custom_total_price) : Math.max(0, baseRental + addonsTotal - disc);
+    const commission_amount = Math.round(finalTotal * COMMISSION_RATE);
 
     const booking = await Booking.create({
       machine_id: machine._id,
@@ -51,7 +59,11 @@ router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
       start_date, end_date,
       days: days.length,
       price_per_day: machine.price_per_day,
-      total_price,
+      selected_addons: addonsList,
+      discount_amount: disc,
+      is_negotiated: !!is_negotiated,
+      negotiated_price: Number(negotiated_price) || 0,
+      total_price: finalTotal,
       commission_rate: COMMISSION_RATE,
       commission_amount,
       payment_method: payment_method || 'cash',

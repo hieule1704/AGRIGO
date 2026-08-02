@@ -46,7 +46,11 @@ export default function MachineDetail() {
     }
   }
 
-  async function executeFinalBooking(pm, ps) {
+  const [selectedAddons, setSelectedAddons] = useState([]);
+  const [showNegotiateModal, setShowNegotiateModal] = useState(false);
+  const [negotiateForm, setNegotiateForm] = useState({ targetPrice: '', note: '' });
+
+  async function executeFinalBooking(pm, ps, isNeg = false, customPrice = 0) {
     setSubmittingBooking(true);
     setErr(''); setOk('');
     try {
@@ -55,11 +59,18 @@ export default function MachineDetail() {
         ...form,
         payment_method: pm || paymentMethod,
         payment_status: ps || 'completed',
+        selected_addons: selectedAddons,
+        discount_amount: totalDiscount,
+        is_negotiated: isNeg,
+        negotiated_price: customPrice,
+        custom_total_price: customPrice > 0 ? customPrice : undefined,
       });
       setShowPaymentModal(false);
-      setOk('🎉 Đã gửi đơn đặt lịch & xác nhận thanh toán thành công! Vui lòng chờ chủ máy bàn giao phương tiện.');
+      setShowNegotiateModal(false);
+      setOk('🎉 Đã gửi đơn đặt lịch & đề xuất giá thành công! Vui lòng chờ chủ máy phản hồi.');
       alert('🎉 Đặt máy thành công! Đơn hàng của bạn đã được chuyển tới Chủ máy.');
       setForm({ start_date: '', end_date: '', note: '' });
+      setSelectedAddons([]);
       load();
     } catch (e) {
       setErr(e.message);
@@ -74,6 +85,24 @@ export default function MachineDetail() {
   const { machine, owner, reviews } = data;
   const cat = machine.category_id || {};
   const numDays = calcDays(form.start_date, form.end_date);
+
+  const baseRental = numDays * (machine.price_per_day || 0);
+  let addonsTotal = 0;
+  selectedAddons.forEach((a) => {
+    addonsTotal += (a.price || 0) * numDays;
+  });
+
+  let longTermDiscount = 0;
+  if (numDays >= (machine.min_days_for_discount || 3) && machine.discount_long_term > 0) {
+    longTermDiscount = Math.round(baseRental * (machine.discount_long_term / 100));
+  }
+
+  let comboDiscount = 0;
+  if (selectedAddons.length >= 2 && machine.discount_combo > 0) {
+    comboDiscount = Math.round(addonsTotal * (machine.discount_combo / 100));
+  }
+
+  const totalDiscount = longTermDiscount + comboDiscount;
 
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80';
   const isUnsplashDefault = machine.image_url && machine.image_url.includes('unsplash.com');
@@ -186,7 +215,31 @@ export default function MachineDetail() {
         </div>
 
         <div className="booking-box">
-          <div className="price-big">{formatVND(machine.price_per_day)} <span className="small">/ {machine.price_unit}</span></div>
+          <div className="price-big">
+            {machine.price_max > machine.price_per_day ? (
+              <div>
+                <span style={{ fontSize: 13, color: 'var(--muted)', display: 'block', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 'normal' }}>Khoảng giá ước lượng:</span>
+                <span style={{ fontSize: 20, color: 'var(--green-deep)' }}>{formatVND(machine.price_per_day)} ~ {formatVND(machine.price_max)}</span>
+                <span className="small"> / {machine.price_unit}</span>
+              </div>
+            ) : (
+              <div>
+                {formatVND(machine.price_per_day)} <span className="small">/ {machine.price_unit}</span>
+              </div>
+            )}
+          </div>
+
+          {machine.allow_negotiation && (
+            <button
+              type="button"
+              className="btn btn-outline btn-block"
+              style={{ marginTop: 10, borderColor: 'var(--gold)', color: 'var(--gold-dark)', fontWeight: 'bold', background: '#FFFDF5' }}
+              onClick={() => setShowNegotiateModal(true)}
+            >
+              💬 Thương Lượng / Đàm Phán Giá Trực Tiếp
+            </button>
+          )}
+
           <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '16px 0' }} />
 
           {/* Lịch Rảnh / Bận Trực Quan Dạng Chấm Xanh Đỏ */}
@@ -216,12 +269,51 @@ export default function MachineDetail() {
                   value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
               </div>
 
-              {numDays > 0 && (
-                <div style={{ margin: '14px 0', padding: 12, background: 'var(--bg-light)', borderRadius: 8, border: '1px dashed var(--green-mid)' }}>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>TẠM TÍNH TỔNG TIỀN:</div>
-                  <div style={{ fontSize: 16, color: 'var(--green-deep)', fontWeight: 'bold', marginTop: 4 }}>
-                    {numDays} ngày × {formatVND(machine.price_per_day)} = {formatVND(numDays * machine.price_per_day)}
+              {/* Dịch vụ Microservices bổ trợ tùy chọn */}
+              {machine.addons && machine.addons.length > 0 && (
+                <div className="field" style={{ background: '#F8FAFC', padding: 12, borderRadius: 10, border: '1px solid var(--line)' }}>
+                  <label style={{ fontWeight: 'bold', color: 'var(--green-deep)', marginBottom: 8, display: 'block' }}>
+                    🛠️ Dịch Vụ Bổ Trợ Microservices Đi Kèm (Tùy chọn):
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {machine.addons.map((addon, idx) => {
+                      const isChecked = selectedAddons.some(a => a.name === addon.name);
+                      return (
+                        <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, cursor: 'pointer', background: isChecked ? '#FFFDF5' : '#fff', padding: '6px 10px', borderRadius: 6, border: isChecked ? '1px solid var(--gold)' : '1px solid var(--line)' }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAddons([...selectedAddons, addon]);
+                              } else {
+                                setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                              }
+                            }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <b>{addon.name}</b>
+                            <div style={{ fontSize: 11.5, color: 'var(--ink-soft)' }}>
+                              +{formatVND(addon.price)} / {addon.unit} {addon.description && `(${addon.description})`}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
+                </div>
+              )}
+
+              {/* Ưu đãi giảm giá tự động Smart Discounts */}
+              {(longTermDiscount > 0 || comboDiscount > 0) && (
+                <div style={{ background: '#ECFDF5', border: '1px solid #10B981', padding: 10, borderRadius: 8, margin: '12px 0', fontSize: 12, color: '#065F46' }}>
+                  <b style={{ display: 'block', marginBottom: 4 }}>🎉 Bạn Được Tự Động Áp Dụng Ưu Đãi Giảm Giá:</b>
+                  {longTermDiscount > 0 && (
+                    <div>• 🎁 Thuê dài hạn ({machine.discount_long_term}%): -{formatVND(longTermDiscount)}</div>
+                  )}
+                  {comboDiscount > 0 && (
+                    <div>• ⚡ Combo Microservice ({machine.discount_combo}%): -{formatVND(comboDiscount)}</div>
+                  )}
                 </div>
               )}
 
@@ -392,6 +484,64 @@ export default function MachineDetail() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal Thương Lượng / Đàm Phán Giá Trực Tiếp */}
+        {showNegotiateModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#fff', padding: 26, borderRadius: 20, maxWidth: 480, width: '100%', boxShadow: '0 12px 36px rgba(0,0,0,0.3)', border: '2px solid var(--gold)' }}>
+              <div className="flex-between" style={{ marginBottom: 14 }}>
+                <h3 style={{ margin: 0, color: 'var(--green-deep)' }}>💬 Đề Xuất Thương Lượng / Đàm Phán Giá Mùa Vụ</h3>
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowNegotiateModal(false)}>✖ Đóng</button>
+              </div>
+              <p className="small" style={{ color: 'var(--ink-soft)', marginBottom: 16 }}>
+                Bà con có thể đề xuất mức giá thuê mong muốn cho diện tích ruộng hoặc địa hình đặc thù. Chủ máy <b>{owner?.full_name}</b> sẽ xem xét và phản hồi tức thì.
+              </p>
+
+              <div style={{ background: '#FFFDF5', padding: 12, borderRadius: 10, border: '1px solid var(--gold)', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>KHOẢNG GIÁ NIÊM YẾT ƯỚC LƯỢNG CỦA CHỦ MÁY:</div>
+                <div style={{ fontSize: 18, color: 'var(--green-deep)', fontWeight: '800', marginTop: 2 }}>
+                  {formatVND(machine.price_per_day)} {machine.price_max > machine.price_per_day ? `~ ${formatVND(machine.price_max)}` : ''} / {machine.price_unit}
+                </div>
+              </div>
+
+              <div className="field" style={{ marginBottom: 12 }}>
+                <label style={{ fontWeight: 'bold' }}>Mức giá mong muốn đề xuất (VNĐ / {machine.price_unit}):</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="VD: 1200000"
+                  value={negotiateForm.targetPrice}
+                  onChange={(e) => setNegotiateForm({ ...negotiateForm, targetPrice: e.target.value })}
+                />
+              </div>
+
+              <div className="field" style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 'bold' }}>Ghi chú đàm phán (Địa hình, diện tích ruộng...):</label>
+                <textarea
+                  rows={3}
+                  placeholder="VD: Ruộng nhà tôi 5 công ở Thoại Sơn lầy nhẹ, gặt liên tục 2 ngày..."
+                  value={negotiateForm.note}
+                  onChange={(e) => setNegotiateForm({ ...negotiateForm, note: e.target.value })}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                onClick={() => {
+                  if (!negotiateForm.targetPrice) {
+                    alert('Vui lòng nhập mức giá đề xuất!');
+                    return;
+                  }
+                  executeFinalBooking('cash', 'pending', true, Number(negotiateForm.targetPrice));
+                }}
+                disabled={submittingBooking}
+              >
+                {submittingBooking ? '⏳ Đang gửi đề xuất...' : '🚀 Gửi Đề Xuất Đàm Phán Ngay'}
+              </button>
             </div>
           </div>
         )}

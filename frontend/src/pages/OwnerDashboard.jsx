@@ -55,7 +55,10 @@ export default function OwnerDashboard() {
 
   const [form, setForm] = useState({
     category_id: '', name: '', description: '', brand: '', year_made: '',
-    price_per_day: '', price_unit: 'ngày', district: '', address_detail: '', image_url: '',
+    price_per_day: '', price_max: '', price_unit: 'ngày', district: '', address_detail: '', image_url: '',
+    available_start_date: '', available_end_date: '',
+    allow_negotiation: false, discount_long_term: 10, min_days_for_discount: 3, discount_combo: 5,
+    addons: [],
     lat: '', lng: '',
   });
 
@@ -322,6 +325,79 @@ export default function OwnerDashboard() {
                 <div className="field"><label>Thương hiệu</label><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} /></div>
                 <div className="field"><label>Đời máy (năm)</label><input type="number" value={form.year_made} onChange={(e) => setForm({ ...form, year_made: e.target.value })} /></div>
                 <div className="field"><label>Giá thuê / ngày (VNĐ)</label><input type="number" required value={form.price_per_day} onChange={(e) => setForm({ ...form, price_per_day: e.target.value })} /></div>
+                <div className="field">
+                  <label>Giá ước lượng tối đa (Tạo Khoảng giá)</label>
+                  <input type="number" placeholder="Để trống nếu giá cố định" value={form.price_max || ''} onChange={(e) => setForm({ ...form, price_max: e.target.value })} />
+                </div>
+                <div className="field full" style={{ background: '#FFFDF5', padding: 12, borderRadius: 10, border: '1px solid var(--gold)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0, fontWeight: 'bold', color: 'var(--green-deep)' }}>
+                    <input type="checkbox" checked={form.allow_negotiation} onChange={(e) => setForm({ ...form, allow_negotiation: e.target.checked })} />
+                    <span>💬 Cho phép Nông dân bấm "Thương lượng / Đàm phán giá" (Dành cho mùa vụ đặc thù)</span>
+                  </label>
+                </div>
+
+                <div className="field">
+                  <label style={{ color: '#059669', fontWeight: 'bold' }}>🎁 Giảm giá Thuê dài hạn (%)</label>
+                  <input type="number" placeholder="VD: 10 (%)" value={form.discount_long_term} onChange={(e) => setForm({ ...form, discount_long_term: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label style={{ color: '#059669', fontWeight: 'bold' }}>📅 Thuê từ số ngày tối thiểu để nhận giảm giá</label>
+                  <input type="number" placeholder="VD: 3 (ngày)" value={form.min_days_for_discount} onChange={(e) => setForm({ ...form, min_days_for_discount: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label style={{ color: '#059669', fontWeight: 'bold' }}>⚡ Giảm giá Combo (%) khi chọn từ 2 Microservices</label>
+                  <input type="number" placeholder="VD: 5 (%)" value={form.discount_combo} onChange={(e) => setForm({ ...form, discount_combo: e.target.value })} />
+                </div>
+
+                {/* Section Microservices Dịch Vụ Bổ Trợ Đi Kèm */}
+                <div className="field full" style={{ background: '#F8FAFC', padding: 16, borderRadius: 12, border: '1px solid var(--line)' }}>
+                  <b style={{ fontSize: 14, color: 'var(--green-deep)', display: 'block', marginBottom: 6 }}>
+                    🛠️ Dịch Vụ Bổ Trợ Microservices Đi Kèm (Chủ máy cung cấp thêm - Nông dân chọn tùy ý)
+                  </b>
+                  <div className="small" style={{ color: 'var(--ink-soft)', marginBottom: 12 }}>
+                    Bấm nhanh để chọn các dịch vụ bổ trợ phổ biến:
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                    {[
+                      { name: '👨‍🌾 Kèm thợ lái máy chuyên nghiệp', price: 200000, unit: 'ngày', description: 'Có thợ tay nghề cao vận hành máy suốt ca gặt/cày' },
+                      { name: '⛽ Bao nhiên liệu Dầu DO trọn gói', price: 150000, unit: 'ngày', description: 'Đã bao gồm 100% dầu DO vận hành' },
+                      { name: '🚚 Giao máy & vận chuyển tận công ruộng', price: 100000, unit: 'chuyến', description: 'Chở máy cày/máy gặt đến tận ruộng nông dân' },
+                      { name: '🚁 Đầu phun hạt / Sạ lúa cho Drone', price: 80000, unit: 'ngày', description: 'Gắn kèm đầu phun sạ lúa chính hãng DJI' },
+                    ].map((preset, pIdx) => {
+                      const isAdded = form.addons.some(a => a.name === preset.name);
+                      return (
+                        <button
+                          key={pIdx}
+                          type="button"
+                          className={`btn btn-sm ${isAdded ? 'btn-primary' : 'btn-outline'}`}
+                          onClick={() => {
+                            if (isAdded) {
+                              setForm({ ...form, addons: form.addons.filter(a => a.name !== preset.name) });
+                            } else {
+                              setForm({ ...form, addons: [...form.addons, preset] });
+                            }
+                          }}
+                        >
+                          {isAdded ? '✓ ' : '+ '} {preset.name} (+{formatVND(preset.price)})
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {form.addons.length > 0 && (
+                    <div style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid var(--line)' }}>
+                      <b style={{ fontSize: 13, color: 'var(--green-deep)' }}>Các Dịch Vụ Bổ Trợ Đã Chọn ({form.addons.length}):</b>
+                      <ul style={{ paddingLeft: 20, margin: '6px 0 0', fontSize: 13 }}>
+                        {form.addons.map((addon, aIdx) => (
+                          <li key={aIdx} style={{ marginBottom: 4 }}>
+                            <b>{addon.name}</b>: +{formatVND(addon.price)} / {addon.unit}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
                 <div className="field">
                   <label style={{ color: 'var(--green-deep)', fontWeight: 'bold' }}>📅 Ngày bắt đầu nhận cho thuê mùa vụ</label>
                   <input type="date" value={form.available_start_date || ''} onChange={(e) => setForm({ ...form, available_start_date: e.target.value })} />

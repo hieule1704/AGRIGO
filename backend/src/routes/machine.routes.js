@@ -95,17 +95,22 @@ router.get('/:id', async (req, res) => {
 // POST /api/machines  (chu may dang may moi)
 router.post('/', requireAuth, requireRole('owner'), async (req, res) => {
   try {
-    const { category_id, name, description, brand, year_made, price_per_day, price_unit, district, address_detail, lat, lng, image_url, available_start_date, available_end_date } = req.body;
+    const { category_id, name, description, brand, year_made, price_per_day, price_max, price_unit, district, address_detail, lat, lng, image_url, available_start_date, available_end_date, allow_negotiation, discount_long_term, min_days_for_discount, discount_combo, addons } = req.body;
     if (!category_id || !name || !price_per_day || !district) {
       return res.status(400).json({ error: 'Vui lòng nhập đủ: loại máy, tên máy, giá/ngày, khu vực.' });
     }
     const machine = await Machine.create({
       owner_id: req.user._id,
       category_id, name, description, brand, year_made,
-      price_per_day, price_unit: price_unit || 'ngày',
+      price_per_day, price_max: price_max || 0, price_unit: price_unit || 'ngày',
       district, address_detail, lat, lng, image_url,
       available_start_date: available_start_date || '',
       available_end_date: available_end_date || '',
+      allow_negotiation: !!allow_negotiation,
+      discount_long_term: Number(discount_long_term) || 0,
+      min_days_for_discount: Number(min_days_for_discount) || 3,
+      discount_combo: Number(discount_combo) || 0,
+      addons: Array.isArray(addons) ? addons : [],
       status: 'pending',
     });
     res.status(201).json({ machine });
@@ -121,7 +126,7 @@ router.put('/:id', requireAuth, requireRole('owner'), async (req, res) => {
   if (String(machine.owner_id) !== String(req.user._id)) {
     return res.status(403).json({ error: 'Bạn không sở hữu máy này.' });
   }
-  const fields = ['name', 'description', 'brand', 'year_made', 'price_per_day', 'price_unit', 'district', 'address_detail', 'lat', 'lng', 'image_url', 'category_id', 'available_start_date', 'available_end_date'];
+  const fields = ['name', 'description', 'brand', 'year_made', 'price_per_day', 'price_max', 'price_unit', 'district', 'address_detail', 'lat', 'lng', 'image_url', 'category_id', 'available_start_date', 'available_end_date', 'allow_negotiation', 'discount_long_term', 'min_days_for_discount', 'discount_combo', 'addons'];
   fields.forEach((f) => {
     if (req.body[f] !== undefined) machine[f] = req.body[f];
   });

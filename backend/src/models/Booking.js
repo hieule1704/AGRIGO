@@ -14,6 +14,16 @@ const BookingSchema = new mongoose.Schema(
     commission_amount: { type: Number, default: 0 },
     payment_method: { type: String, default: 'cash' }, // 'qr', 'ewallet', 'cash'
     payment_status: { type: String, default: 'completed' }, // 'pending', 'completed'
+    selected_addons: [
+      {
+        name: String,
+        price: Number,
+        unit: String,
+      },
+    ],
+    discount_amount: { type: Number, default: 0 },
+    is_negotiated: { type: Boolean, default: false },
+    negotiated_price: { type: Number, default: 0 },
     note: { type: String },
     status: {
       type: String,
