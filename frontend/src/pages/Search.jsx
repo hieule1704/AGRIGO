@@ -329,29 +329,23 @@ function MachineRow({ machine: m, compact = false }) {
             left: 6,
             background: 'linear-gradient(135deg, #B9840C, #E8AC1F)',
             color: '#153A2E',
-            padding: '3px 8px',
+            padding: '2px 7px',
             borderRadius: '999px',
-            fontSize: 10.5,
+            fontSize: 10,
             fontWeight: '800',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
             zIndex: 2,
+            whiteSpace: 'nowrap',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 4,
+            gap: 3,
           }}>
-            ⭐ Đối tác đáng tin cậy
+            ⭐ Đối tác
           </span>
         )}
       </div>
       <div className="mid">
-        <div className="cat" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span>{categoryIcon(cat.slug)} {cat.name}</span>
-          {m.owner_id?.is_premium && (
-            <span className="badge badge-gold" style={{ fontSize: 11, padding: '2px 8px', fontWeight: 'bold' }}>
-              ⭐ Đối tác đáng tin cậy
-            </span>
-          )}
-        </div>
+        <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
         <h3>{m.name}</h3>
         <div className="loc">📍 {m.district}{m.address_detail ? ' · ' + m.address_detail : ''}</div>
         {!compact && <div className="desc">{(m.description || '').slice(0, 110)}...</div>}

@@ -140,19 +140,29 @@ export default function MachineDetail() {
               )}
             </div>
             {owner ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: owner.is_premium ? '2px solid var(--gold)' : '1px solid var(--green-mid)', flexShrink: 0 }}>
-                  {owner.avatar_url ? (
-                    <img src={resolveImageUrl(owner.avatar_url)} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/52?text=U'; }} />
-                  ) : (
-                    <span style={{ fontSize: 26 }}>👤</span>
-                  )}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <Link to={`/owner-profile/${owner._id}`} title="Xem hồ sơ tất cả máy của chủ sở hữu này" style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: owner.is_premium ? '2px solid var(--gold)' : '1px solid var(--green-mid)', flexShrink: 0, cursor: 'pointer' }}>
+                    {owner.avatar_url ? (
+                      <img src={resolveImageUrl(owner.avatar_url)} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/52?text=U'; }} />
+                    ) : (
+                      <span style={{ fontSize: 26 }}>👤</span>
+                    )}
+                  </Link>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 'bold' }}>
+                      <Link to={`/owner-profile/${owner._id}`} style={{ color: 'var(--green-deep)', textDecoration: 'none' }}>
+                        {owner.full_name}
+                      </Link>
+                      {owner.is_premium && <span style={{ color: 'var(--gold-dark)', fontSize: 13, marginLeft: 6 }}>⭐ Partner</span>}
+                    </p>
+                    <p className="small" style={{ margin: '2px 0 0' }}>📍 {owner.district || 'Chưa cập nhật'} · 📞 {owner.phone || 'Ẩn'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p style={{ margin: 0, fontWeight: 'bold' }}>
-                    {owner.full_name} {owner.is_premium && <span style={{ color: 'var(--gold-dark)', fontSize: 13 }}>⭐ Partner</span>}
-                  </p>
-                  <p className="small" style={{ margin: '2px 0 0' }}>📍 {owner.district || 'Chưa cập nhật'} · 📞 {owner.phone || 'Ẩn'}</p>
+                <div style={{ marginTop: 12 }}>
+                  <Link to={`/owner-profile/${owner._id}`} className="btn btn-outline btn-sm" style={{ width: '100%', textAlign: 'center' }}>
+                    🚜 Xem tất cả máy đang đăng của chủ này →
+                  </Link>
                 </div>
               </div>
             ) : <p className="small">Không có thông tin chủ máy.</p>}

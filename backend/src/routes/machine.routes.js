@@ -46,6 +46,35 @@ router.get('/mine', requireAuth, requireRole('owner'), async (req, res) => {
   res.json({ machines });
 });
 
+// GET /api/machines/owner-public/:id (Xem ho so cong khai & tat ca may cua 1 chu may)
+router.get('/owner-public/:id', async (req, res) => {
+  try {
+    const owner = await User.findById(req.params.id).select('-password_hash');
+    if (!owner) return res.status(404).json({ error: 'Không tìm thấy thông tin chủ máy.' });
+
+    const machines = await Machine.find({ owner_id: owner._id, status: 'approved' })
+      .populate('category_id', 'name slug')
+      .populate('owner_id', 'full_name is_premium phone district avatar_url')
+      .sort({ created_at: -1 });
+
+    res.json({
+      owner: {
+        _id: owner._id,
+        full_name: owner.full_name,
+        phone: owner.phone,
+        district: owner.district,
+        address: owner.address,
+        avatar_url: owner.avatar_url,
+        is_premium: owner.is_premium,
+        created_at: owner.created_at,
+      },
+      machines,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi tải thông tin chủ máy.', detail: err.message });
+  }
+});
+
 // GET /api/machines/:id  (chi tiet + thong tin chu may + danh gia)
 router.get('/:id', async (req, res) => {
   const machine = await Machine.findById(req.params.id).populate('category_id', 'name slug');
@@ -58,7 +87,7 @@ router.get('/:id', async (req, res) => {
 
   res.json({
     machine,
-    owner: owner ? { full_name: owner.full_name, phone: owner.phone, district: owner.district, avatar_url: owner.avatar_url, is_premium: owner.is_premium } : null,
+    owner: owner ? { _id: owner._id, full_name: owner.full_name, phone: owner.phone, district: owner.district, avatar_url: owner.avatar_url, is_premium: owner.is_premium } : null,
     reviews,
   });
 });

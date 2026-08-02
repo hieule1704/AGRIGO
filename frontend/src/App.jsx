@@ -18,6 +18,7 @@ import PricingPolicy from './pages/PricingPolicy';
 import Guide from './pages/Guide';
 
 import Profile from './pages/Profile';
+import OwnerPublicProfile from './pages/OwnerPublicProfile';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Search />} />
         <Route path="/machine/:id" element={<MachineDetail />} />
+        <Route path="/owner-profile/:id" element={<OwnerPublicProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/about" element={<About />} />
