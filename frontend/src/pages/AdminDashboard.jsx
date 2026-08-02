@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api, resolveImageUrl } from '../api';
 import { StatusPill } from '../components/ProtectedRoute';
 import { formatVND, formatDate } from '../components/MachineCard';
 
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                       <tr key={m._id}>
                         <td>
                           {m.image_url ? (
-                            <img src={m.image_url} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/44?text=🚜'; }} />
+                            <img src={resolveImageUrl(m.image_url)} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/44?text=🚜'; }} />
                           ) : (
                             <span style={{ fontSize: 24 }}>🚜</span>
                           )}

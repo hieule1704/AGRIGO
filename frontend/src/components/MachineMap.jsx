@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import { categoryIcon, formatVND } from './MachineCard';
+import { resolveImageUrl } from '../api';
 
 // Tọa độ trung tâm mặc định (Tỉnh An Giang / Miền Tây)
 const DEFAULT_CENTER = [10.45, 105.25];
@@ -91,7 +92,7 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
                 <div style={{ minWidth: 180, padding: 4 }}>
                   {m.image_url ? (
                     <img
-                      src={m.image_url}
+                      src={resolveImageUrl(m.image_url)}
                       alt={m.name}
                       style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 8, marginBottom: 6 }}
                     />

@@ -33,7 +33,7 @@ router.post('/search-assistant', async (req, res) => {
   // Thu goi Gemini API
   if (genAI) {
     try {
-      const model = genAI.getGenerativeAIModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Bạn là trợ lý AI tìm kiếm máy nông nghiệp AgriGo tại An Giang.
 Hãy phân tích yêu cầu tìm kiếm của người dùng: "${query}"
 
@@ -87,7 +87,7 @@ router.post('/generate-description', requireAuth, requireRole('owner'), async (r
 
   if (genAI) {
     try {
-      const model = genAI.getGenerativeAIModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Hãy viết một đoạn mô tả ngắn (3-4 câu) hấp dẫn, chuyên nghiệp bằng tiếng Việt để đăng cho thuê máy nông nghiệp trên ứng dụng AgriGo An Giang.
 Thông tin máy:
 - Tên máy: ${name}
@@ -130,7 +130,7 @@ router.post('/summarize-reviews', requireAuth, requireRole('admin'), async (req,
 
   if (genAI) {
     try {
-      const model = genAI.getGenerativeAIModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const reviewText = reviews.map((r) => `- [${r.rating}/5 sao] ${r.farmer_name || 'Nông dân'}: ${r.comment}`).join('\n');
       const prompt = `Phân tích và tóm tắt các đánh giá sau đây của nông dân về máy "${machine_name}":
 ${reviewText}
@@ -179,7 +179,7 @@ router.post('/moderate-content', requireAuth, requireRole('admin'), async (req, 
 
   if (genAI) {
     try {
-      const model = genAI.getGenerativeAIModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Kiểm tra xem thông tin đăng máy nông nghiệp sau đây có vi phạm tiêu chuẩn (spam, ngôn từ tục tĩu, lừa đảo) hay không:
 Tên máy: ${name}
 Mô tả: ${description || ''}

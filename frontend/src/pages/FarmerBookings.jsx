@@ -50,34 +50,63 @@ export default function FarmerBookings() {
               <td>{formatVND(b.total_price)}</td>
               <td><StatusPill status={b.status} /></td>
               <td>
-                {(b.status === 'pending' || b.status === 'accepted') && <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>}
-                {b.status === 'completed' && <button className="btn btn-outline btn-sm" onClick={() => setReviewFor(b._id)}>Đánh giá</button>}
+                {(b.status === 'pending' || b.status === 'accepted') && (
+                  <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>
+                )}
+                {b.status === 'completed' && (
+                  <button className="btn btn-primary btn-sm" style={{ background: 'var(--gold)', color: 'var(--green-deep)', border: 'none', fontWeight: 'bold' }} onClick={() => setReviewFor(b._id)}>
+                    ✍️ Viết Đánh Giá
+                  </button>
+                )}
               </td>
             </tr>
           ))}
-          {bookings.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Bạn chưa có đơn đặt lịch nào. <a href="/search">Tìm máy ngay →</a></td></tr>}
+          {bookings.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20, textAlign: 'center' }}>Bạn chưa có đơn đặt lịch nào. <a href="/search">Tìm máy ngay →</a></td></tr>}
         </tbody>
       </table>
 
       {reviewFor && (
-        <div className="card-box" style={{ marginTop: 24, maxWidth: 420 }}>
-          <h3>Đánh giá máy đã thuê</h3>
-          {err && <div className="alert alert-error">{err}</div>}
-          <form onSubmit={submitReview}>
-            <div className="field">
-              <label>Số sao (1-5)</label>
-              <input type="number" min={1} max={5} required value={reviewForm.rating}
-                onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })} />
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', padding: 28, borderRadius: 18, maxWidth: 480, width: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+            <div className="flex-between" style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: 0 }}>✍️ Viết Nhận Xét & Đánh Giá Máy</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setReviewFor(null)}>✖ Đóng</button>
             </div>
-            <div className="field">
-              <label>Nhận xét</label>
-              <textarea value={reviewForm.comment} onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })} />
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-primary" type="submit">Gửi đánh giá</button>
-              <button className="btn btn-outline" type="button" onClick={() => setReviewFor(null)}>Hủy</button>
-            </div>
-          </form>
+            {err && <div className="alert alert-error" style={{ marginBottom: 14 }}>{err}</div>}
+            <form onSubmit={submitReview}>
+              <div className="field">
+                <label>Đánh giá số sao chất lượng:</label>
+                <div style={{ display: 'flex', gap: 10, fontSize: 24, margin: '6px 0 14px', cursor: 'pointer' }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      style={{ color: star <= reviewForm.rating ? '#F59E0B' : '#CBD5E1', transition: 'color 0.15s' }}
+                      onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                    >
+                      ★
+                    </span>
+                  ))}
+                  <span style={{ fontSize: 14, color: 'var(--ink-soft)', alignSelf: 'center', marginLeft: 8 }}>
+                    ({reviewForm.rating}/5 sao)
+                  </span>
+                </div>
+              </div>
+              <div className="field">
+                <label>Ý kiến nhận xét & Cảm nhận thực tế (Comment):</label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="Ví dụ: Máy gặt chạy rất sạch lúa, đúng giờ, chủ máy nhiệt tình phục vụ tại đồng ruộng..."
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button className="btn btn-primary btn-block" type="submit">🚀 Gửi Đánh Giá Ngay</button>
+                <button className="btn btn-outline" type="button" onClick={() => setReviewFor(null)}>Hủy</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

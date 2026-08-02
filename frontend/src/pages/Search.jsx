@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { api } from '../api';
+import { api, resolveImageUrl } from '../api';
 import { categoryIcon, formatVND, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
 import { useScrollReveal } from '../hooks/useScrollReveal';
@@ -311,7 +311,7 @@ function MachineRow({ machine: m, compact = false }) {
   const cat = m.category_id || {};
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
   const isUnsplashDefault = m.image_url && m.image_url.includes('unsplash.com');
-  const imgSrc = (!m.image_url || isUnsplashDefault) ? fallbackImg : m.image_url;
+  const imgSrc = (!m.image_url || isUnsplashDefault) ? fallbackImg : resolveImageUrl(m.image_url);
 
   return (
     <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''} reveal`}>

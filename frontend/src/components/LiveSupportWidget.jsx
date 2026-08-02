@@ -18,12 +18,6 @@ const PRESET_FAQS = [
 
 export default function LiveSupportWidget() {
   const location = useLocation();
-
-  // Hide live support widget on Admin dashboard routes (/admin)
-  if (location.pathname.startsWith('/admin')) {
-    return null;
-  }
-
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -59,6 +53,11 @@ export default function LiveSupportWidget() {
       { sender: 'user', text: faq.q },
       { sender: 'bot', text: faq.a },
     ]);
+  }
+
+  // Hide live support widget on Admin dashboard routes (/admin)
+  if (location.pathname.startsWith('/admin')) {
+    return null;
   }
 
   return (

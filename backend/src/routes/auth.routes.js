@@ -60,6 +60,12 @@ router.post('/login', loginLimiter, async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng.' });
 
+    // Tu dong cap nhat het han Premium neu da past premium_expires_at
+    if (user.is_premium && user.premium_expires_at && new Date(user.premium_expires_at) < new Date()) {
+      user.is_premium = false;
+      await user.save();
+    }
+
     const token = signToken(user);
     res.json({ token, user: user.toSafeJSON() });
   } catch (err) {
@@ -69,7 +75,12 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req, res) => {
-  res.json({ user: req.user.toSafeJSON() });
+  const user = req.user;
+  if (user.is_premium && user.premium_expires_at && new Date(user.premium_expires_at) < new Date()) {
+    user.is_premium = false;
+    await user.save();
+  }
+  res.json({ user: user.toSafeJSON() });
 });
 
 // PUT /api/auth/profile (Cap nhat ho so & avatar)

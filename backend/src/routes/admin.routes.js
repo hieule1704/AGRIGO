@@ -159,23 +159,42 @@ router.get('/bookings', async (req, res) => {
 router.patch('/bookings/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
-    const booking = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const allowedStatuses = ['pending', 'accepted', 'completed', 'rejected', 'cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Trạng thái đơn hàng không hợp lệ.' });
+    }
+
+    const booking = await Booking.findById(req.params.id);
     if (!booking) return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
+
+    booking.status = status;
+    await booking.save();
     res.json({ booking });
   } catch (err) {
-    res.status(500).json({ error: 'Lỗi cập nhật trạng thái đơn.' });
+    res.status(500).json({ error: 'Lỗi cập nhật trạng thái đơn.', detail: err.message });
   }
 });
 
-// DELETE /api/admin/bookings/:id (Admin xoa don hang)
+// DELETE /api/admin/bookings/:id (Admin xoa don hang & don dep lien quan)
 router.delete('/bookings/:id', async (req, res) => {
   try {
+    const Review = require('../models/Review');
     const booking = await Booking.findById(req.params.id);
     if (!booking) return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
+
+    // Giai phong ngay trong lich bận cua may
+    const machine = await Machine.findById(booking.machine_id);
+    if (machine && machine.schedule) {
+      machine.schedule = machine.schedule.filter((s) => String(s.booking_id) !== String(booking._id));
+      await machine.save();
+    }
+
+    // Xoa review lien quan
+    await Review.deleteMany({ booking_id: booking._id });
     await booking.deleteOne();
     res.json({ ok: true, id: req.params.id });
   } catch (err) {
-    res.status(500).json({ error: 'Lỗi khi xóa đơn hàng.' });
+    res.status(500).json({ error: 'Lỗi khi xóa đơn hàng.', detail: err.message });
   }
 });
 

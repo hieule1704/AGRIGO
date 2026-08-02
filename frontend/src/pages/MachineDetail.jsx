@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { api, resolveImageUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { categoryIcon, formatVND, formatDate, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
@@ -76,7 +76,7 @@ export default function MachineDetail() {
 
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1600&auto=format&fit=crop&q=80';
   const isUnsplashDefault = machine.image_url && machine.image_url.includes('unsplash.com');
-  const detailImgSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : machine.image_url;
+  const detailImgSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : resolveImageUrl(machine.image_url);
 
   return (
     <div className="container" style={{ paddingTop: 26 }}>
@@ -143,7 +143,7 @@ export default function MachineDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: owner.is_premium ? '2px solid var(--gold)' : '1px solid var(--green-mid)', flexShrink: 0 }}>
                   {owner.avatar_url ? (
-                    <img src={owner.avatar_url} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/52?text=U'; }} />
+                    <img src={resolveImageUrl(owner.avatar_url)} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/52?text=U'; }} />
                   ) : (
                     <span style={{ fontSize: 26 }}>👤</span>
                   )}
