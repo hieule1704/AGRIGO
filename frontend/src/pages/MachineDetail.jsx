@@ -13,6 +13,9 @@ export default function MachineDetail() {
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
   const [form, setForm] = useState({ start_date: '', end_date: '', note: '' });
+  const [paymentMethod, setPaymentMethod] = useState('qr'); // 'qr' | 'ewallet' | 'cash'
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [submittingBooking, setSubmittingBooking] = useState(false);
 
   function load() {
     api.get(`/machines/${id}`).then(setData).catch((e) => setErr(e.message));
@@ -28,20 +31,39 @@ export default function MachineDetail() {
     return diff > 0 ? diff : 0;
   }
 
-  async function submitBooking(e) {
+  function handleInitiateBooking(e) {
     e.preventDefault();
     setErr(''); setOk('');
     if (new Date(form.start_date) > new Date(form.end_date)) {
       setErr('Ngày kết thúc phải từ hoặc sau ngày bắt đầu.');
       return;
     }
+    if (paymentMethod === 'cash') {
+      executeFinalBooking('cash', 'pending');
+    } else {
+      setShowPaymentModal(true);
+    }
+  }
+
+  async function executeFinalBooking(pm, ps) {
+    setSubmittingBooking(true);
+    setErr(''); setOk('');
     try {
-      await api.post('/bookings', { machine_id: id, ...form });
-      setOk('Đã gửi yêu cầu đặt lịch! Vui lòng chờ chủ máy xác nhận.');
+      await api.post('/bookings', {
+        machine_id: id,
+        ...form,
+        payment_method: pm || paymentMethod,
+        payment_status: ps || 'completed',
+      });
+      setShowPaymentModal(false);
+      setOk('🎉 Đã gửi đơn đặt lịch & xác nhận thanh toán thành công! Vui lòng chờ chủ máy bàn giao phương tiện.');
+      alert('🎉 Đặt máy thành công! Đơn hàng của bạn đã được chuyển tới Chủ máy.');
       setForm({ start_date: '', end_date: '', note: '' });
       load();
     } catch (e) {
       setErr(e.message);
+    } finally {
+      setSubmittingBooking(false);
     }
   }
 
@@ -181,7 +203,7 @@ export default function MachineDetail() {
             <p className="small">Chỉ tài khoản Nông dân mới có thể đặt lịch thuê máy.</p>
           )}
           {user && user.role === 'farmer' && (
-            <form onSubmit={submitBooking}>
+            <form onSubmit={handleInitiateBooking}>
               <div className="field">
                 <label>Ngày bắt đầu</label>
                 <input type="date" required min={new Date().toISOString().slice(0, 10)}
@@ -202,16 +224,122 @@ export default function MachineDetail() {
                 </div>
               )}
 
+              {/* Lựa chọn Phương Thức Thanh Toán Demo */}
+              <div className="field">
+                <label style={{ fontWeight: 'bold', marginBottom: 8, display: 'block' }}>💳 Chọn phương thức thanh toán</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'qr' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'qr' ? '#FFFDF5' : '#fff' }}>
+                    <input type="radio" name="pm" value="qr" checked={paymentMethod === 'qr'} onChange={() => setPaymentMethod('qr')} />
+                    <span><b>🏦 VietQR Chuyển khoản Ngân hàng</b> (Khuyên dùng)</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'ewallet' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'ewallet' ? '#FFFDF5' : '#fff' }}>
+                    <input type="radio" name="pm" value="ewallet" checked={paymentMethod === 'ewallet'} onChange={() => setPaymentMethod('ewallet')} />
+                    <span><b>📲 Ví điện tử (Momo / ZaloPay)</b></span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'cash' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'cash' ? '#FFFDF5' : '#fff' }}>
+                    <input type="radio" name="pm" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
+                    <span><b>💵 Tiền mặt khi nhận bàn giao máy (COD)</b></span>
+                  </label>
+                </div>
+              </div>
+
               <div className="field">
                 <label>Ghi chú cho chủ máy</label>
                 <textarea placeholder="VD: 3 công ruộng, cần gặt buổi sáng"
                   value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
               </div>
-              <button className="btn btn-primary btn-block" type="submit">Gửi yêu cầu đặt lịch</button>
+
+              <button className="btn btn-primary btn-block" type="submit" disabled={submittingBooking}>
+                {submittingBooking ? '⏳ Đang gửi đơn...' : '🚀 Xác nhận & Đặt máy'}
+              </button>
               <p className="small" style={{ marginTop: 8 }}>* Hoa hồng nền tảng 5% áp dụng trên tổng giá trị đơn thuê.</p>
             </form>
           )}
         </div>
+
+        {/* Modal Thanh toán Mã QR VietQR hoặc Ví điện tử */}
+        {showPaymentModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#fff', padding: 24, borderRadius: 20, maxWidth: 460, width: '100%', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '2px solid var(--gold)', animation: 'slideDown 0.25s ease-out' }}>
+              <div className="flex-between" style={{ marginBottom: 14 }}>
+                <b style={{ fontSize: 16, color: 'var(--green-deep)' }}>
+                  {paymentMethod === 'qr' ? '🏦 Thanh Toán Mã QR Ngân Hàng VietQR' : '📲 Thanh Toán Qua Ví Điện Tử'}
+                </b>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowPaymentModal(false)}>✖ Đóng</button>
+              </div>
+
+              {paymentMethod === 'qr' ? (
+                <div>
+                  <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-soft)' }}>
+                    Mở ứng dụng Ngân hàng (MBBank, Vietcombank, Techcombank...) quét mã QR dưới đây để hoàn tất đơn hàng.
+                  </p>
+
+                  <div style={{ background: '#FFFDF5', padding: 12, borderRadius: 12, border: '1px solid var(--gold)', marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>TỔNG SỐ TIỀN CẦN THANH TOÁN:</div>
+                    <div style={{ fontSize: 22, color: 'var(--green-deep)', fontWeight: '800', marginTop: 2 }}>
+                      {formatVND(numDays * machine.price_per_day)}
+                    </div>
+                  </div>
+
+                  {/* Ảnh Mã QR Code từ Thư Mục Public (/qr_code.jpg) */}
+                  <div style={{ textAlign: 'center', margin: '14px 0' }}>
+                    <img
+                      src="/qr_code.jpg"
+                      alt="Mã QR Thanh toán VietQR"
+                      style={{
+                        width: 220,
+                        height: 220,
+                        objectFit: 'contain',
+                        borderRadius: 12,
+                        border: '2px solid var(--gold)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/220?text=QR+Thanh+Toán+VietQR';
+                      }}
+                    />
+                  </div>
+
+                  <p className="small" style={{ fontSize: 11.5, opacity: 0.8, marginBottom: 16 }}>
+                    📌 Nội dung chuyển khoản tự động: <b>AGRIGO {user?.phone || 'NHANH'}</b>
+                  </p>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => executeFinalBooking('qr', 'completed')}
+                    disabled={submittingBooking}
+                    style={{ padding: '12px', fontSize: 15 }}
+                  >
+                    {submittingBooking ? '⏳ Đang xác nhận...' : '✅ Tôi đã quét mã chuyển khoản thành công'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <p className="small" style={{ margin: '0 0 16px', color: 'var(--ink-soft)' }}>
+                    Ví điện tử Momo / ZaloPay đang kết nối sẵn sàng cho đơn đặt máy.
+                  </p>
+                  <div style={{ background: '#FFFDF5', padding: 14, borderRadius: 12, border: '1px solid var(--gold)', marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>TỔNG THANH TOÁN QUA VÍ:</div>
+                    <div style={{ fontSize: 22, color: 'var(--green-deep)', fontWeight: '800', marginTop: 2 }}>
+                      {formatVND(numDays * machine.price_per_day)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => executeFinalBooking('ewallet', 'completed')}
+                    disabled={submittingBooking}
+                    style={{ padding: '12px', fontSize: 15 }}
+                  >
+                    {submittingBooking ? '⏳ Đang xác nhận...' : '⚡ Xác nhận thanh toán qua Ví điện tử'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

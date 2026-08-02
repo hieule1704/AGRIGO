@@ -35,13 +35,18 @@ export default function FarmerBookings() {
       <p className="small" style={{ marginBottom: 20 }}>Theo dõi trạng thái các đơn đặt máy bạn đã gửi.</p>
 
       <table className="data-table">
-        <thead><tr><th>Máy</th><th>Khu vực</th><th>Ngày thuê</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead>
+        <thead><tr><th>Máy</th><th>Khu vực</th><th>Ngày thuê</th><th>Thanh toán</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
         <tbody>
           {bookings.map((b) => (
             <tr key={b._id}>
-              <td>{b.machine_id?.name}</td>
+              <td><b>{b.machine_id?.name}</b></td>
               <td>{b.machine_id?.district}</td>
               <td>{formatDate(b.start_date)} → {formatDate(b.end_date)} ({b.days} ngày)</td>
+              <td>
+                <span className="badge">
+                  {b.payment_method === 'qr' ? '🏦 VietQR' : b.payment_method === 'ewallet' ? '📲 Ví điện tử' : '💵 Tiền mặt COD'}
+                </span>
+              </td>
               <td>{formatVND(b.total_price)}</td>
               <td><StatusPill status={b.status} /></td>
               <td>
@@ -50,7 +55,7 @@ export default function FarmerBookings() {
               </td>
             </tr>
           ))}
-          {bookings.length === 0 && <tr><td colSpan={6} className="small" style={{ padding: 20 }}>Bạn chưa có đơn đặt lịch nào. <a href="/search">Tìm máy ngay →</a></td></tr>}
+          {bookings.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Bạn chưa có đơn đặt lịch nào. <a href="/search">Tìm máy ngay →</a></td></tr>}
         </tbody>
       </table>
 

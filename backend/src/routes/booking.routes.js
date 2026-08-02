@@ -20,7 +20,7 @@ function dateRange(start, end) {
 // POST /api/bookings  (nong dan dat lich)
 router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
   try {
-    const { machine_id, start_date, end_date, note } = req.body;
+    const { machine_id, start_date, end_date, note, payment_method, payment_status } = req.body;
     if (!machine_id || !start_date || !end_date) {
       return res.status(400).json({ error: 'Vui lòng chọn máy và ngày thuê.' });
     }
@@ -54,6 +54,8 @@ router.post('/', requireAuth, requireRole('farmer'), async (req, res) => {
       total_price,
       commission_rate: COMMISSION_RATE,
       commission_amount,
+      payment_method: payment_method || 'cash',
+      payment_status: payment_status || 'completed',
       note,
       status: 'pending',
     });

@@ -12,6 +12,8 @@ const BookingSchema = new mongoose.Schema(
     total_price: { type: Number, required: true },
     commission_rate: { type: Number, default: 0.05 },
     commission_amount: { type: Number, default: 0 },
+    payment_method: { type: String, default: 'cash' }, // 'qr', 'ewallet', 'cash'
+    payment_status: { type: String, default: 'completed' }, // 'pending', 'completed'
     note: { type: String },
     status: {
       type: String,
