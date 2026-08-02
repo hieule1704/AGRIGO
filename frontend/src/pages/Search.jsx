@@ -232,8 +232,8 @@ export default function Search() {
                 </div>
               )}
 
-              {/* Thanh Phân Trang - Movie Site Style Pagination Bar [1] [2] [3] [4] [5] */}
-              {totalPages > 1 && (
+              {/* Thanh Phân Trang - Chỉ hiển thị khi có trên 1 trang và KHÔNG ở chế độ Chỉ Bản Đồ */}
+              {totalPages > 1 && viewMode !== 'map' && (
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
