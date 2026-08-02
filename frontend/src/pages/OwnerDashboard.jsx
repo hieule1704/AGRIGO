@@ -236,6 +236,8 @@ export default function OwnerDashboard() {
         <a href="#" className={tab === 'bookings' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('bookings'); }}>📅 Đơn đặt lịch</a>
         <a href="#" className={tab === 'analytics' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('analytics'); }}>📊 Phân tích thị trường {user?.is_premium ? '👑' : '🔒'}</a>
         <a href="#" className={tab === 'ads' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('ads'); }}>📢 Quảng cáo dàn xe {user?.is_premium ? '👑' : '🔒'}</a>
+        <a href="#" className={tab === 'insurance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('insurance'); }}>🛡️ Bảo hiểm thiết bị</a>
+        <a href="#" className={tab === 'maintenance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('maintenance'); }}>🔧 Bảo dưỡng & Cứu hộ</a>
       </aside>
 
       <main className="dash-main">
@@ -629,6 +631,164 @@ export default function OwnerDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab 🛡️ Bảo hiểm thiết bị nông cơ */}
+        {tab === 'insurance' && (
+          <div className="card-box">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+              <div>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🛡️ Gói Bảo Hiểm An Tâm Cho Thuê Thiết Bị Nông Nghiệp
+                </h3>
+                <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>
+                  Đồng hành cùng Bảo Việt & PJICO Insurance — Bảo vệ toàn diện máy gặt, máy cày, drone khỏi rủi ro hỏng hóc, ngập lụt & tai nạn ruộng lúa.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => alert('🎉 Hệ thống đã ghi nhận yêu cầu tư vấn Bảo hiểm của bạn. Chuyên viên PJICO An Giang sẽ liên hệ lại qua SĐT trong 15 phút!')}
+              >
+                📝 Gửi Khai Báo Bồi Thường Khẩn Cấp
+              </button>
+            </div>
+
+            {/* 2 Gói bảo hiểm nổi bật */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 26 }}>
+              <div style={{ background: 'linear-gradient(135deg, #FFFDF5 0%, #FFF8E7 100%)', border: '2px solid var(--gold)', borderRadius: 14, padding: 20 }}>
+                <div className="badge badge-gold" style={{ marginBottom: 10, fontSize: 12 }}>⚡ PHỔ BIẾN NHẤT</div>
+                <h4 style={{ margin: '0 0 6px', fontSize: 18, color: 'var(--green-deep)' }}>1. Bảo Hiểm Theo Chuyến Thuê (1.5%/Đơn)</h4>
+                <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                  Chỉ từ <b>15.000đ/ngày</b>. Bảo vệ 100% rủi ro nông dân làm ngập lụt động cơ, va quẹt gãy cần gặt, chập cháy linh kiện khi đang thuê vận hành.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ marginTop: 10, width: '100%' }}
+                  onClick={() => alert('✅ Đã bật tự động tích hợp Bảo hiểm Chuyến Thuê vào tất cả các đơn đặt máy mới của bạn!')}
+                >
+                  🚀 Bật Tự Động Bảo Hiểm Theo Chuyến
+                </button>
+              </div>
+
+              <div style={{ background: '#F8FAFC', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
+                <div className="badge" style={{ marginBottom: 10, fontSize: 12 }}>🛡️ BẢO VỆ TOÀN DIỆN 365 NGÀY</div>
+                <h4 style={{ margin: '0 0 6px', fontSize: 18, color: 'var(--ink)' }}>2. Bảo Hiểm Máy Cơ Giới Hàng Năm</h4>
+                <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                  Chiết khấu <b>20%</b> cho hội viên AGRIGO An Giang (~1.200.000đ/năm). Bảo vệ 24/7 trộm cắp tài sản trên đồng ruộng, hỏa hoạn và bão lốc mùa vụ.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  style={{ marginTop: 10, width: '100%' }}
+                  onClick={() => alert('📋 Yêu cầu tư vấn bảo hiểm hàng năm đã được gửi tới tư vấn viên khu vực ' + (user?.district || 'An Giang'))}
+                >
+                  📋 Đăng Ký Tư Vấn Gói Hàng Năm
+                </button>
+              </div>
+            </div>
+
+            <h4>🚜 Trạng Thái Bảo Hiểm Dàn Xe Của Bạn</h4>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Tên máy</th><th>Loại thiết bị</th><th>Khu vực</th><th>Gói bảo hiểm</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                </thead>
+                <tbody>
+                  {machines.map((m) => (
+                    <tr key={m._id}>
+                      <td><b>{m.name}</b></td>
+                      <td>{m.category_id?.name || 'Nông nghiệp'}</td>
+                      <td>{m.district}</td>
+                      <td>
+                        <span className="badge badge-gold">Bảo hiểm Chuyến Thuê (1.5%)</span>
+                      </td>
+                      <td><span className="badge badge-green">🛡️ Đang bảo vệ</span></td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => alert(`Khai báo sự cố hỏng hóc cho máy "${m.name}". Mã hồ sơ claim: AGR-INS-${m._id.slice(-6)}`)}
+                        >
+                          📢 Khai báo sự cố
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {machines.length === 0 && (
+                    <tr><td colSpan={6} className="small" style={{ padding: 16 }}>Bạn chưa đăng máy nào trên hệ thống.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 🔧 Bảo dưỡng & Cứu hộ máy nông nghiệp 24/7 */}
+        {tab === 'maintenance' && (
+          <div className="card-box">
+            <div style={{ background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff', padding: 24, borderRadius: 16, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h3 style={{ margin: '0 0 6px', color: 'var(--gold)', fontSize: 20 }}>
+                  🚨 TRẠM CỨU HỘ & BẢO DƯỠNG NÔNG CƠ LƯU ĐỘNG 24/7
+                </h3>
+                <p style={{ margin: 0, fontSize: 13.5, opacity: 0.9 }}>
+                  Cứu hộ khẩn cấp tại đồng ruộng An Giang · Thay thế phụ tùng Kubota, Yanmar, DJI Drone chính hãng tận nơi.
+                </p>
+              </div>
+              <a
+                href="tel:19006868"
+                className="btn btn-primary"
+                style={{ padding: '12px 24px', fontSize: 15, fontWeight: 'bold', background: 'var(--gold)', color: 'var(--green-deep)', border: 'none' }}
+              >
+                📞 HOTLINE CỨU HỘ: 1900 6868
+              </a>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h4 style={{ margin: 0 }}>📍 Gara & Thợ Sửa Chữa Lưu Động Gần Nhất (Khu vực {user?.district || 'An Giang'})</h4>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => alert('Vui lòng chọn trạm sửa chữa bên dưới để đặt lịch bảo dưỡng trước mùa vụ.')}
+              >
+                📅 Đặt Lịch Bảo Dưỡng Trước Mùa Vụ
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 26 }}>
+              {[
+                { name: 'Trung Tâm Bảo Hành Kubota An Giang', phone: '0296 385 6789', address: 'QL91, Tỉnh Lộ 941, H. Châu Phú, An Giang', rating: 4.9, services: 'Sửa chữa máy gặt, máy cày Kubota chính hãng, thay nhớt động cơ', district: 'Châu Phú' },
+                { name: 'Gara Nông Cơ Miền Tây (Yanmar & Mahindra)', phone: '0918 234 567', address: 'Mỹ Thới, TP. Long Xuyên, An Giang', rating: 4.8, services: 'Bảo dưỡng định kỳ, phục hồi hệ thống thủy lực, xích máy gặt', district: 'Long Xuyên' },
+                { name: 'Trạm Cứu Hộ Phụ Tùng Drone Phun Thuốc An Giang', phone: '0907 888 999', address: 'TT. Chợ Mới, H. Chợ Mới, An Giang', rating: 4.9, services: 'Sửa chữa khẩn cấp Drone DJI Agras T30/T40, thay cánh quạt, pin', district: 'Chợ Mới' },
+                { name: 'Sửa Chữa Nông Cơ Lưu Động Tri Tôn - Tịnh Biên', phone: '0979 112 233', address: 'TT. Tri Tôn, H. Tri Tôn, An Giang', rating: 4.7, services: 'Cứu hộ lưu động tại đồng ruộng 24/7, thay dầu động cơ', district: 'Tri Tôn' },
+              ].map((g, idx) => (
+                <div key={idx} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 14, padding: 18, boxShadow: 'var(--shadow-card)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+                    <h5 style={{ margin: 0, fontSize: 16, color: 'var(--green-deep)', fontWeight: 800 }}>{g.name}</h5>
+                    <span className="badge badge-gold">★ {g.rating}</span>
+                  </div>
+                  <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', margin: '0 0 6px' }}>📍 {g.address}</p>
+                  <p style={{ fontSize: 13, color: 'var(--ink)', margin: '0 0 12px', background: 'var(--green-soft)', padding: '6px 10px', borderRadius: 6 }}>
+                    🛠 Dịch vụ: <b>{g.services}</b>
+                  </p>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <a href={`tel:${g.phone}`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>
+                      📞 Gọi Thợ ({g.phone})
+                    </a>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => alert(`Đã gửi yêu cầu đặt lịch bảo dưỡng máy tới Gara "${g.name}". Gara sẽ gọi lại cho bạn!`)}
+                    >
+                      📅 Đặt lịch bảo dưỡng
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>

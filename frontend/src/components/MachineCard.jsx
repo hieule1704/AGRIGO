@@ -40,26 +40,6 @@ export default function MachineCard({ machine }) {
   return (
     <Link to={`/machine/${machine._id}`} className="machine-card">
       <div className="thumb" style={{ position: 'relative' }}>
-        {/* Category Icon Badge Overlay */}
-        <span style={{
-          position: 'absolute',
-          top: 10,
-          left: 10,
-          background: 'rgba(21, 58, 46, 0.85)',
-          color: '#fff',
-          padding: '4px 10px',
-          borderRadius: '999px',
-          fontSize: 12,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          backdropFilter: 'blur(4px)',
-          fontWeight: 'bold',
-          zIndex: 2,
-        }}>
-          {categoryIcon(cat.slug)} {cat.name || 'Nông nghiệp'}
-        </span>
-
         {machine.rating_count > 0 && (
           <span className="badge badge-gold">★ {Number(machine.rating_avg).toFixed(1)}</span>
         )}
