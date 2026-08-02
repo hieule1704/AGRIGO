@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { resolveImageUrl } from '../api';
 
 const CATEGORY_ICONS = {
   'may-cay': '🚜', 'may-gat': '🌾', 'may-cay-lua': '🌱', 'drone-phun-thuoc': '🚁',
@@ -33,7 +34,8 @@ export default function MachineCard({ machine }) {
   const cat = machine.category_id || {};
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
   const isUnsplashDefault = machine.image_url && machine.image_url.includes('unsplash.com');
-  const imgSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : machine.image_url;
+  const rawSrc = (!machine.image_url || isUnsplashDefault) ? fallbackImg : machine.image_url;
+  const imgSrc = resolveImageUrl(rawSrc);
 
   return (
     <Link to={`/machine/${machine._id}`} className="machine-card">

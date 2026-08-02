@@ -1,7 +1,28 @@
 // src/api.js
 // Wrapper goi API backend, tu dong gan Bearer token neu da dang nhap
 
-const BASE = import.meta.env.VITE_API_URL || '/api';
+function sanitizeBaseUrl(url) {
+  if (!url) return '/api';
+  let cleaned = url.trim();
+  if (cleaned.endsWith('/')) cleaned = cleaned.slice(0, -1);
+  if (cleaned.startsWith('http') && !cleaned.endsWith('/api')) {
+    cleaned += '/api';
+  }
+  return cleaned;
+}
+
+const BASE = sanitizeBaseUrl(import.meta.env.VITE_API_URL);
+
+export function resolveImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  
+  let origin = BASE;
+  if (origin.endsWith('/api')) origin = origin.replace(/\/api$/, '');
+  if (origin.endsWith('/')) origin = origin.slice(0, -1);
+  
+  return origin + (url.startsWith('/') ? url : '/' + url);
+}
 
 async function request(path, { method = 'GET', body, token } = {}) {
   const headers = {};
