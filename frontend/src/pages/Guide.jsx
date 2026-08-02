@@ -176,17 +176,36 @@ export default function Guide() {
               </div>
 
               <div style={{ background: 'var(--bg-light)', padding: 18, borderRadius: 12 }}>
-                <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Nếu máy hỏng đột xuất khi ra ruộng thì xử lý ra sao?</b>
+                <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Nếu người thuê làm hư hỏng thiết bị/máy móc thì xử lý ra sao?</b>
                 <p style={{ fontSize: 13.5, margin: 0, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-                  Chủ máy bấm từ chối đơn và thông báo cho Hotline 1900 6868. AGRIGO sẽ hỗ trợ kết nối máy khác trong cùng huyện ngay trong ngày.
+                  Hai bên cùng lập <b>Biên bản Bàn giao Kỹ thuật Số</b> trước khi vận hành. Nếu hỏng hóc do người thuê vận hành sai quy trình, sự cố va quẹt sẽ được khấu trừ từ Tiền thế chân hoặc được <b>Bảo Việt / PJICO Insurance (Gói 1.5%/đơn)</b> đền bù 100% chi phí sửa chữa.
                 </p>
               </div>
 
               <div style={{ background: 'var(--bg-light)', padding: 18, borderRadius: 12 }}>
-                <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Tôi muốn đổi hình ảnh banner trang web thì làm thế nào?</b>
+                <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Chi phí khấu hao máy móc sau nhiều lần cho thuê được tính thế nào?</b>
                 <p style={{ fontSize: 13.5, margin: 0, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-                  Mỗi trang đều có hằng số `_IMAGES` ở ngay đầu file code. Bạn chỉ cần mở file `.jsx` tương ứng và đổi đường dẫn URL hình ảnh là chạy ngay lập tức!
+                  Giá thuê ngày trên AGRIGO đã bao gồm <b>Quỹ Khấu Hao Mùa Vụ (15-20%)</b>. Hệ thống tự động đếm giờ vận hành tích lũy để cảnh báo bảo dưỡng dầu nhớt, xích gặt & pin drone định kỳ cho chủ máy.
                 </p>
+              </div>
+            </div>
+
+            {/* Chi tiết Quy trình An tâm 3 Bước */}
+            <div style={{ marginTop: 30, background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff', padding: 26, borderRadius: 16 }}>
+              <h4 style={{ color: 'var(--gold)', margin: '0 0 12px', fontSize: 18 }}>🛡️ Quy Trình 3 Bước Đảm Bảo Quyền Lợi Cả Hai Bên</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13.5 }}>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 14, borderRadius: 10 }}>
+                  <b style={{ color: 'var(--gold)', display: 'block', marginBottom: 4 }}>1. Kiểm Tra Đầu Vào</b>
+                  Chụp ảnh 4 góc máy & tích chọn trạng thái linh kiện trên ứng dụng trước khi bàn giao.
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 14, borderRadius: 10 }}>
+                  <b style={{ color: 'var(--gold)', display: 'block', marginBottom: 4 }}>2. Bảo Hiểm Chuyến Thuê</b>
+                  Mỗi đơn hàng được bảo vệ bởi gói bảo hiểm rủi ro ruộng lúa chỉ từ 15.000đ/ngày.
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 14, borderRadius: 10 }}>
+                  <b style={{ color: 'var(--gold)', display: 'block', marginBottom: 4 }}>3. Tự Động Trích Khấu Hao</b>
+                  Cơ chế tính giá thuê tích hợp quỹ bảo dưỡng định kỳ giúp máy luôn đạt hiệu suất 99%.
+                </div>
               </div>
             </div>
           </div>
