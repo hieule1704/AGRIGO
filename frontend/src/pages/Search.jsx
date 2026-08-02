@@ -98,6 +98,32 @@ export default function Search() {
 
   return (
     <div className="container" style={{ paddingTop: 26, paddingBottom: 40 }}>
+
+      {/* Sponsored Banner Quảng cáo Đối tác VIP */}
+      <AdBannerSlider district={district} />
+
+      <form className="search-card" style={{ marginBottom: 20 }} onSubmit={(e) => e.preventDefault()}>
+        <div className="search-field">
+          <label>Khu vực</label>
+          <select value={district} onChange={(e) => updateParam('district', e.target.value)}>
+            <option value="">Tất cả khu vực</option>
+            {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+        <div className="search-field">
+          <label>Loại máy</label>
+          <select value={category} onChange={(e) => updateParam('category', e.target.value)}>
+            <option value="">Tất cả loại máy</option>
+            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div className="search-field">
+          <label>Ngày cần dùng</label>
+          <input type="date" value={date} onChange={(e) => updateParam('date', e.target.value)} />
+        </div>
+        <button className="btn btn-primary" type="button" onClick={() => { }}>🔍 Tìm kiếm</button>
+      </form>
+
       {/* AI Search Assistant */}
       <div className="card-box" style={{ marginBottom: 16, background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff' }}>
         <form onSubmit={handleAiSearch} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -124,31 +150,6 @@ export default function Search() {
           </div>
         )}
       </div>
-
-      {/* Sponsored Banner Quảng cáo Đối tác VIP */}
-      <AdBannerSlider district={district} />
-
-      <form className="search-card" style={{ marginBottom: 20 }} onSubmit={(e) => e.preventDefault()}>
-        <div className="search-field">
-          <label>Khu vực</label>
-          <select value={district} onChange={(e) => updateParam('district', e.target.value)}>
-            <option value="">Tất cả khu vực</option>
-            {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        <div className="search-field">
-          <label>Loại máy</label>
-          <select value={category} onChange={(e) => updateParam('category', e.target.value)}>
-            <option value="">Tất cả loại máy</option>
-            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div className="search-field">
-          <label>Ngày cần dùng</label>
-          <input type="date" value={date} onChange={(e) => updateParam('date', e.target.value)} />
-        </div>
-        <button className="btn btn-primary" type="button" onClick={() => {}}>🔍 Tìm kiếm</button>
-      </form>
 
       {/* Thanh điều khiển Chế độ xem: Danh sách / Bản đồ / Song song */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, background: 'var(--bg-card)', padding: '10px 16px', borderRadius: 12, border: '1px solid var(--line)' }}>

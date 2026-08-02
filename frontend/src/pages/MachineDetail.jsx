@@ -227,18 +227,62 @@ export default function MachineDetail() {
               {/* Lựa chọn Phương Thức Thanh Toán Demo */}
               <div className="field">
                 <label style={{ fontWeight: 'bold', marginBottom: 8, display: 'block' }}>💳 Chọn phương thức thanh toán</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'qr' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'qr' ? '#FFFDF5' : '#fff' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <label
+                    className="payment-option-label"
+                    style={{
+                      border: paymentMethod === 'qr' ? '2px solid var(--gold)' : '1px solid var(--line)',
+                      background: paymentMethod === 'qr' ? '#FFFDF5' : '#ffffff',
+                      boxShadow: paymentMethod === 'qr' ? '0 2px 8px rgba(232,172,31,0.15)' : 'none',
+                    }}
+                  >
                     <input type="radio" name="pm" value="qr" checked={paymentMethod === 'qr'} onChange={() => setPaymentMethod('qr')} />
-                    <span><b>🏦 VietQR Chuyển khoản Ngân hàng</b> (Khuyên dùng)</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '700', fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>🏦</span> VietQR Chuyển khoản Ngân hàng
+                      </div>
+                      <div style={{ fontSize: 11.5, color: 'var(--gold-dark)', fontWeight: '600', marginTop: 2 }}>
+                        ⚡ Khuyên dùng · Quét mã tức thì
+                      </div>
+                    </div>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'ewallet' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'ewallet' ? '#FFFDF5' : '#fff' }}>
+
+                  <label
+                    className="payment-option-label"
+                    style={{
+                      border: paymentMethod === 'ewallet' ? '2px solid var(--gold)' : '1px solid var(--line)',
+                      background: paymentMethod === 'ewallet' ? '#FFFDF5' : '#ffffff',
+                      boxShadow: paymentMethod === 'ewallet' ? '0 2px 8px rgba(232,172,31,0.15)' : 'none',
+                    }}
+                  >
                     <input type="radio" name="pm" value="ewallet" checked={paymentMethod === 'ewallet'} onChange={() => setPaymentMethod('ewallet')} />
-                    <span><b>📲 Ví điện tử (Momo / ZaloPay)</b></span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '700', fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>📲</span> Ví điện tử (Momo / ZaloPay)
+                      </div>
+                      <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginTop: 2 }}>
+                        Thanh toán tự động qua App
+                      </div>
+                    </div>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: paymentMethod === 'cash' ? '2px solid var(--gold)' : '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', background: paymentMethod === 'cash' ? '#FFFDF5' : '#fff' }}>
+
+                  <label
+                    className="payment-option-label"
+                    style={{
+                      border: paymentMethod === 'cash' ? '2px solid var(--gold)' : '1px solid var(--line)',
+                      background: paymentMethod === 'cash' ? '#FFFDF5' : '#ffffff',
+                      boxShadow: paymentMethod === 'cash' ? '0 2px 8px rgba(232,172,31,0.15)' : 'none',
+                    }}
+                  >
                     <input type="radio" name="pm" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                    <span><b>💵 Tiền mặt khi nhận bàn giao máy (COD)</b></span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '700', fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>💵</span> Tiền mặt khi nhận máy (COD)
+                      </div>
+                      <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginTop: 2 }}>
+                        Thanh toán trực tiếp cho chủ máy
+                      </div>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -281,22 +325,15 @@ export default function MachineDetail() {
                     </div>
                   </div>
 
-                  {/* Ảnh Mã QR Code từ Thư Mục Public (/qr_code.jpg) */}
-                  <div style={{ textAlign: 'center', margin: '14px 0' }}>
+                  {/* Ảnh Mã QR Code Căn Giữa Hoàn Hảo & Kích Thước Chuẩn */}
+                  <div className="qr-modal-container">
                     <img
                       src="/qr_code.jpg"
                       alt="Mã QR Thanh toán VietQR"
-                      style={{
-                        width: 220,
-                        height: 220,
-                        objectFit: 'contain',
-                        borderRadius: 12,
-                        border: '2px solid var(--gold)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      }}
+                      className="qr-modal-img"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/220?text=QR+Thanh+Toán+VietQR';
+                        e.target.src = 'https://via.placeholder.com/240?text=QR+Thanh+Toán+VietQR';
                       }}
                     />
                   </div>
