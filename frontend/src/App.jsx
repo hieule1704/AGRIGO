@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import LiveSupportWidget from './components/LiveSupportWidget';
+import BackendHealthBanner from './components/BackendHealthBanner';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import Home from './pages/Home';
@@ -21,6 +22,7 @@ import Profile from './pages/Profile';
 export default function App() {
   return (
     <>
+      <BackendHealthBanner />
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />

@@ -33,17 +33,23 @@ async function request(path, { method = 'GET', body, token } = {}) {
   const t = token || localStorage.getItem('agrigo_token');
   if (t) headers.Authorization = `Bearer ${t}`;
 
-  const res = await fetch(BASE + path, {
-    method,
-    headers,
-    body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
-  });
+  let res;
+  try {
+    res = await fetch(BASE + path, {
+      method,
+      headers,
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
+    });
+  } catch (err) {
+    console.error('Lỗi kết nối API Backend:', err);
+    throw new Error('🔌 Không thể kết nối tới Backend server. Nếu đang dùng Render (Free-Tier), máy chủ có thể đang khởi động lại (Cold Start). Vui lòng chờ 15 - 30 giây rồi thử lại!');
+  }
 
   let data = {};
   try { data = await res.json(); } catch (_) { /* no body */ }
 
   if (!res.ok) {
-    throw new Error(data.error || `Lỗi ${res.status}`);
+    throw new Error(data.error || `Lỗi ${res.status}: ${res.statusText}`);
   }
   return data;
 }

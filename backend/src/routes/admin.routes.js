@@ -140,6 +140,21 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// GET /api/admin/bookings (Admin lay danh sach tat ca don dat)
+router.get('/bookings', async (req, res) => {
+  try {
+    const bookings = await Booking.find()
+      .populate('machine_id', 'name district price_per_day')
+      .populate('farmer_id', 'full_name phone district email')
+      .populate('owner_id', 'full_name phone email')
+      .sort({ created_at: -1 })
+      .limit(200);
+    res.json({ bookings });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi tải danh sách đơn hàng.', detail: err.message });
+  }
+});
+
 // PATCH /api/admin/bookings/:id/status (Admin doi trang thai don hang)
 router.patch('/bookings/:id/status', async (req, res) => {
   try {
