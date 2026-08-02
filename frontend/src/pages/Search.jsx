@@ -315,16 +315,43 @@ function MachineRow({ machine: m, compact = false }) {
 
   return (
     <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''} reveal`}>
-      <div className="thumb">
+      <div className="thumb" style={{ position: 'relative' }}>
         <img
           src={imgSrc}
           alt={m.name}
           loading="lazy"
           onError={(e) => { e.target.onerror = null; e.target.src = fallbackImg; }}
         />
+        {m.owner_id?.is_premium && (
+          <span style={{
+            position: 'absolute',
+            top: 6,
+            left: 6,
+            background: 'linear-gradient(135deg, #B9840C, #E8AC1F)',
+            color: '#153A2E',
+            padding: '3px 8px',
+            borderRadius: '999px',
+            fontSize: 10.5,
+            fontWeight: '800',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+            zIndex: 2,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+          }}>
+            ⭐ Đối tác đáng tin cậy
+          </span>
+        )}
       </div>
       <div className="mid">
-        <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
+        <div className="cat" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span>{categoryIcon(cat.slug)} {cat.name}</span>
+          {m.owner_id?.is_premium && (
+            <span className="badge badge-gold" style={{ fontSize: 11, padding: '2px 8px', fontWeight: 'bold' }}>
+              ⭐ Đối tác đáng tin cậy
+            </span>
+          )}
+        </div>
         <h3>{m.name}</h3>
         <div className="loc">📍 {m.district}{m.address_detail ? ' · ' + m.address_detail : ''}</div>
         {!compact && <div className="desc">{(m.description || '').slice(0, 110)}...</div>}

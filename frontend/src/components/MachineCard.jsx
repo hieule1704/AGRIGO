@@ -82,7 +82,7 @@ export default function MachineCard({ machine }) {
             alignItems: 'center',
             gap: 4,
           }}>
-            ⭐ Đối tác VIP
+            ⭐ Đối tác đáng tin cậy
           </span>
         )}
         {/* 
