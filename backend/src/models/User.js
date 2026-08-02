@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema(
     address: { type: String },
     district: { type: String },
     avatar_url: { type: String },
+    is_premium: { type: Boolean, default: false },
+    premium_expires_at: { type: Date },
     status: { type: String, enum: ['active', 'locked'], default: 'active' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

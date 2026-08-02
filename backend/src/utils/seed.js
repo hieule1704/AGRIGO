@@ -6,6 +6,7 @@ const Category = require("../models/Category");
 const Machine = require("../models/Machine");
 const Booking = require("../models/Booking");
 const Review = require("../models/Review");
+const Advertisement = require("../models/Advertisement");
 
 const CATEGORIES = [
   { name: "Máy cày", slug: "may-cay", icon: "🚜" },
@@ -85,6 +86,8 @@ async function seedData() {
     role: "owner",
     phone: "0908888111",
     district: "Châu Phú",
+    is_premium: true,
+    premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
 
   const owner2 = await User.create({
@@ -294,6 +297,19 @@ async function seedData() {
     farmer_id: farmer._id,
     rating: 5,
     comment: "Máy gặt làm rất sạch lúa, không bị thất thoát hạt. Chủ máy nhiệt tình, đến đúng 6h sáng!",
+  });
+
+  console.log("🌱 Tạo banner quảng cáo mẫu từ Chủ máy Premium...");
+  await Advertisement.deleteMany({});
+  await Advertisement.create({
+    owner_id: owner1._id,
+    machine_id: createdMachines[0]._id,
+    title: "🚜 Nông Cơ Châu Phú - Giảm 10% giá thuê Máy Cày & Máy Gặt vụ Hè Thu",
+    description: "Dàn xe cơ giới đời mới Kubota & Yanmar sẵn sàng phục vụ bà con An Giang. Cam kết đúng giờ, không nâng giá!",
+    banner_url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1200&auto=format&fit=crop&q=80",
+    target_district: "Châu Phú",
+    status: "active",
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
 
   console.log("✅ Seed dữ liệu thành công với 35+ máy nông nghiệp khắp 11 huyện An Giang!");

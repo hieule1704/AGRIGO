@@ -135,6 +135,75 @@ export default function OwnerDashboard() {
     } catch (e) { alert(e.message); }
   }
 
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [myAds, setMyAds] = useState([]);
+  const [adForm, setAdForm] = useState({ title: '', description: '', banner_url: '', machine_id: '', target_district: '' });
+  const [adSubmitting, setAdSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (tab === 'analytics') loadAnalytics();
+    if (tab === 'ads') loadAds();
+  }, [tab]);
+
+  async function handleUpgradeVip() {
+    setErr(''); setOk('');
+    try {
+      const res = await api.post('/owner/subscribe-premium');
+      setOk(res.message || 'Đã nâng cấp VIP thành công!');
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const res = await api.get('/owner/analytics');
+      setAnalyticsData(res.analytics);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }
+
+  async function loadAds() {
+    try {
+      const res = await api.get('/owner/advertisements');
+      setMyAds(res.advertisements || []);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  async function handleCreateAd(e) {
+    e.preventDefault();
+    setAdSubmitting(true);
+    setErr(''); setOk('');
+    try {
+      await api.post('/owner/advertisements', adForm);
+      setOk('Tạo bài quảng cáo thành công! Banner đã được hiển thị trên hệ thống.');
+      setAdForm({ title: '', description: '', banner_url: '', machine_id: '', target_district: '' });
+      loadAds();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setAdSubmitting(false);
+    }
+  }
+
+  async function handleDeleteAd(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bài quảng cáo này?')) return;
+    try {
+      await api.del(`/owner/advertisements/${id}`);
+      loadAds();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
   const stats = {
     total: machines.length,
     approved: machines.filter((m) => m.status === 'approved').length,
@@ -145,13 +214,44 @@ export default function OwnerDashboard() {
   return (
     <div className="dash-shell">
       <aside className="dash-side">
-        <div className="who">Xin chào,<br /><b style={{ color: '#fff' }}>{user?.full_name}</b></div>
+        <div className="who">
+          Xin chào,<br />
+          <b style={{ color: '#fff' }}>{user?.full_name}</b>
+          {user?.is_premium && (
+            <div style={{ marginTop: 6, display: 'inline-block', background: 'var(--gold)', color: 'var(--green-deep)', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: '800' }}>
+              👑 Đối tác VIP Partner
+            </div>
+          )}
+        </div>
         <a href="#" className={tab === 'machines' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('machines'); }}>🚜 Máy của tôi</a>
         <a href="#" className={tab === 'add' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('add'); }}>➕ Đăng máy mới</a>
         <a href="#" className={tab === 'bookings' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('bookings'); }}>📅 Đơn đặt lịch</a>
+        <a href="#" className={tab === 'analytics' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('analytics'); }}>📊 Phân tích thị trường {user?.is_premium ? '👑' : '🔒'}</a>
+        <a href="#" className={tab === 'ads' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('ads'); }}>📢 Quảng cáo dàn xe {user?.is_premium ? '👑' : '🔒'}</a>
       </aside>
 
       <main className="dash-main">
+        {/* Banner Khách Hàng Premium VIP */}
+        <div className="card-box" style={{ background: user?.is_premium ? 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)' : 'linear-gradient(135deg, #FFFDF5 0%, #FFF8E7 100%)', border: '2px solid var(--gold)', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h3 style={{ margin: '0 0 6px', color: user?.is_premium ? 'var(--gold)' : 'var(--green-deep)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {user?.is_premium ? '👑 Bạn Đang Sử Dụng Gói Chủ Máy VIP Premium' : '⭐ Nâng Cấp Gói Chủ Máy VIP Premium'}
+              </h3>
+              <p style={{ margin: 0, fontSize: 13.5, color: user?.is_premium ? '#fff' : 'var(--ink-soft)', maxWidth: 640 }}>
+                {user?.is_premium
+                  ? 'Thiết bị của bạn đang được ưu tiên hiển thị cao nhất trên Tìm kiếm & Bản đồ. Bạn có toàn quyền sử dụng Công cụ Phân tích thị trường & Đăng bài quảng cáo Banner.'
+                  : 'Ưu tiên hiển thị dàn xe lên đầu kết quả tìm kiếm, có Badge "⭐ Đối tác đáng tin cậy", mở khóa Công cụ Phân tích thị trường & Đăng bài quảng cáo Banner thu hút khách.'}
+              </p>
+            </div>
+            {!user?.is_premium && (
+              <button type="button" className="btn btn-primary" onClick={handleUpgradeVip} style={{ padding: '10px 20px', fontWeight: 'bold' }}>
+                🚀 Nâng cấp VIP Ngay (Demo 199.000đ)
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="stat-grid">
           <div className="stat-card"><div className="num">{stats.total}</div><div className="lbl">Máy đã đăng</div></div>
           <div className="stat-card"><div className="num">{stats.approved}</div><div className="lbl">Đã được duyệt</div></div>
@@ -356,6 +456,171 @@ export default function OwnerDashboard() {
                 {bookings.length === 0 && <tr><td colSpan={6} className="small" style={{ padding: 20 }}>Chưa có đơn đặt lịch nào.</td></tr>}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {tab === 'analytics' && (
+          <div className="card-box">
+            <h3>📊 Phân Tích Thị Trường Cơ Giới Hóa (Dành cho Chủ máy VIP)</h3>
+            {!user?.is_premium ? (
+              <div className="alert alert-error" style={{ padding: 20 }}>
+                <h4>🔒 Tính năng bị khóa</h4>
+                <p>Công cụ phân tích thị trường chuyên sâu chỉ dành riêng cho tài khoản Chủ máy VIP Premium. Vui lòng bấm nút nâng cấp VIP ở trên để kích hoạt.</p>
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleUpgradeVip} style={{ marginTop: 10 }}>
+                  🚀 Nâng cấp VIP Ngay (199.000đ/tháng)
+                </button>
+              </div>
+            ) : analyticsLoading ? (
+              <p className="small">⏳ Đang tải dữ liệu phân tích thị trường...</p>
+            ) : analyticsData ? (
+              <div>
+                <div style={{ marginBottom: 24 }}>
+                  <h4 style={{ color: 'var(--green-deep)', marginBottom: 10 }}>🔥 Nhu cầu Thuê máy theo Khu vực (11 Huyện An Giang)</h4>
+                  <div className="table-responsive">
+                    <table className="data-table">
+                      <thead>
+                        <tr><th>Khu vực / Huyện</th><th>Số đơn đặt lịch</th><th>Tổng giá trị thị trường</th><th>Mức độ hot</th></tr>
+                      </thead>
+                      <tbody>
+                        {analyticsData.bookingsByDistrict.map((d, idx) => (
+                          <tr key={d._id}>
+                            <td><b>📍 {d._id}</b></td>
+                            <td>{d.totalBookings} đơn</td>
+                            <td>{formatVND(d.totalRevenue)}</td>
+                            <td>
+                              <span className={`badge ${idx === 0 ? 'badge-gold' : 'badge-green'}`}>
+                                {idx === 0 ? '🔥 Rất cao' : idx < 3 ? '⚡ Cao' : '👍 Ổn định'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                        {analyticsData.bookingsByDistrict.length === 0 && (
+                          <tr><td colSpan={4} className="small">Chưa có đủ dữ liệu giao dịch khu vực.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 style={{ color: 'var(--green-deep)', marginBottom: 10 }}>💵 So sánh Giá Thuê Dàn Xe của Bạn với Giá Trung Bình Thị Trường</h4>
+                  <div className="table-responsive">
+                    <table className="data-table">
+                      <thead>
+                        <tr><th>Loại máy</th><th>Giá trung bình thị trường</th><th>Giá dàn máy của bạn</th><th>Đánh giá cạnh tranh</th></tr>
+                      </thead>
+                      <tbody>
+                        {analyticsData.priceComparison.map((p) => {
+                          const diff = p.myAvgPrice - p.marketAvgPrice;
+                          return (
+                            <tr key={p.category_slug}>
+                              <td><b>{p.category_name}</b></td>
+                              <td>{p.marketAvgPrice ? formatVND(p.marketAvgPrice) + '/ngày' : 'Chưa có mẫu'}</td>
+                              <td>{p.myAvgPrice ? formatVND(p.myAvgPrice) + '/ngày' : 'Chưa có máy'}</td>
+                              <td>
+                                {!p.myAvgPrice ? (
+                                  <span className="small muted">Chưa có máy loại này</span>
+                                ) : diff < 0 ? (
+                                  <span className="badge badge-green">👍 Rẻ hơn thị trường ({formatVND(Math.abs(diff))})</span>
+                                ) : diff > 0 ? (
+                                  <span className="badge badge-gold">👑 Phân khúc cao cấp (+{formatVND(diff)})</span>
+                                ) : (
+                                  <span className="badge">⚖️ Bằng giá trung bình</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {tab === 'ads' && (
+          <div className="card-box">
+            <h3>📢 Đăng & Quản Lý Bài Quảng Cáo Banner (Dành cho Chủ máy VIP)</h3>
+            {!user?.is_premium ? (
+              <div className="alert alert-error" style={{ padding: 20 }}>
+                <h4>🔒 Tính năng bị khóa</h4>
+                <p>Chỉ có Chủ máy VIP Premium mới có quyền tạo Banner quảng cáo hiển thị nổi bật ở vị trí VIP trên Trang chủ và Trang tìm kiếm.</p>
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleUpgradeVip} style={{ marginTop: 10 }}>
+                  🚀 Nâng cấp VIP Ngay (199.000đ/tháng)
+                </button>
+              </div>
+            ) : (
+              <div>
+                <form onSubmit={handleCreateAd} style={{ background: 'var(--green-soft)', padding: 18, borderRadius: 'var(--radius-md)', marginBottom: 24 }}>
+                  <h4 style={{ margin: '0 0 12px', color: 'var(--green-deep)' }}>✨ Tạo Banner Quảng Cáo Mới</h4>
+                  <div className="form-grid">
+                    <div className="field full">
+                      <label>Tiêu đề quảng cáo *</label>
+                      <input required value={adForm.title} onChange={(e) => setAdForm({ ...adForm, title: e.target.value })} placeholder="VD: Nông Cơ Châu Phú - Giảm 10% giá thuê Máy Cày & Máy Gặt" />
+                    </div>
+                    <div className="field full">
+                      <label>Mô tả ngắn</label>
+                      <input value={adForm.description} onChange={(e) => setAdForm({ ...adForm, description: e.target.value })} placeholder="VD: Dàn xe cơ giới đời mới Kubota & Yanmar sẵn sàng phục vụ..." />
+                    </div>
+                    <div className="field full">
+                      <label>Đường dẫn hình ảnh Banner (URL Image) *</label>
+                      <input required value={adForm.banner_url} onChange={(e) => setAdForm({ ...adForm, banner_url: e.target.value })} placeholder="VD: https://images.unsplash.com/... hoặc /uploads/..." />
+                    </div>
+                    <div className="field">
+                      <label>Gắn với máy nông nghiệp (Tùy chọn)</label>
+                      <select value={adForm.machine_id} onChange={(e) => setAdForm({ ...adForm, machine_id: e.target.value })}>
+                        <option value="">-- Chọn máy cần quảng cáo --</option>
+                        {machines.map((m) => (
+                          <option key={m._id} value={m._id}>{m.name} ({m.district})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Huyện mục tiêu (Tùy chọn)</label>
+                      <select value={adForm.target_district} onChange={(e) => setAdForm({ ...adForm, target_district: e.target.value })}>
+                        <option value="">-- Tất cả các huyện --</option>
+                        {['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'].map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <button type="submit" className="btn btn-primary" style={{ marginTop: 14 }} disabled={adSubmitting}>
+                    {adSubmitting ? 'Đang tạo quảng cáo...' : '📢 Đăng Banner Quảng Cáo'}
+                  </button>
+                </form>
+
+                <h4>📋 Danh sách Banner Quảng Cáo của Bạn</h4>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Hình ảnh Banner</th><th>Tiêu đề</th><th>Huyện mục tiêu</th><th>Lượt click</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                    </thead>
+                    <tbody>
+                      {myAds.map((ad) => (
+                        <tr key={ad._id}>
+                          <td>
+                            <img src={ad.banner_url} alt={ad.title} style={{ width: 80, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+                          </td>
+                          <td><b>{ad.title}</b></td>
+                          <td>{ad.target_district || 'Tất cả'}</td>
+                          <td><b>{ad.clicks}</b> lượt click</td>
+                          <td><span className="badge badge-green">Hoạt động</span></td>
+                          <td>
+                            <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDeleteAd(ad._id)}>Xóa</button>
+                          </td>
+                        </tr>
+                      ))}
+                      {myAds.length === 0 && (
+                        <tr><td colSpan={6} className="small" style={{ padding: 16 }}>Bạn chưa đăng bài quảng cáo nào.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

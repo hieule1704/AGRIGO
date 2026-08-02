@@ -4,6 +4,7 @@ import { api } from '../api';
 import { categoryIcon, formatVND, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import AdBannerSlider from '../components/AdBannerSlider';
 
 const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
 
@@ -123,6 +124,9 @@ export default function Search() {
           </div>
         )}
       </div>
+
+      {/* Sponsored Banner Quảng cáo Đối tác VIP */}
+      <AdBannerSlider district={district} />
 
       <form className="search-card" style={{ marginBottom: 20 }} onSubmit={(e) => e.preventDefault()}>
         <div className="search-field">

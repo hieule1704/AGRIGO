@@ -6,6 +6,8 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
 
+import AdBannerSlider from '../components/AdBannerSlider';
+
 export default function Home() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
@@ -94,6 +96,9 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* Banner Quảng Cáo Đối Tác Premium */}
+      <AdBannerSlider />
 
       {/* Danh sách máy nổi bật */}
       <section className="section">

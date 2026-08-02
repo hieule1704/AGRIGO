@@ -14,6 +14,8 @@ const bookingRoutes = require("./src/routes/booking.routes");
 const adminRoutes = require("./src/routes/admin.routes");
 const uploadRoutes = require("./src/routes/upload.routes");
 const aiRoutes = require("./src/routes/ai.routes");
+const ownerRoutes = require("./src/routes/owner.routes");
+const adRoutes = require("./src/routes/ad.routes");
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
@@ -37,6 +39,8 @@ app.get("/", (req, res) => {
       admin: "/api/admin",
       upload: "/api/upload",
       ai: "/api/ai",
+      owner: "/api/owner",
+      advertisements: "/api/advertisements",
     },
   });
 });
@@ -52,6 +56,8 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/owner", ownerRoutes);
+app.use("/api/advertisements", adRoutes);
 
 // Trinh loi chung
 app.use((err, req, res, next) => {

@@ -12,7 +12,9 @@ router.get('/', async (req, res) => {
   if (district) filter.district = district;
   if (category) filter.category_id = category;
 
-  let query = Machine.find(filter).populate('category_id', 'name slug');
+  let query = Machine.find(filter)
+    .populate('category_id', 'name slug')
+    .populate('owner_id', 'full_name is_premium phone district avatar_url');
 
   if (sort === 'price_asc') query = query.sort({ price_per_day: 1 });
   else if (sort === 'price_desc') query = query.sort({ price_per_day: -1 });
@@ -25,6 +27,13 @@ router.get('/', async (req, res) => {
   if (date) {
     machines = machines.filter((m) => !(m.schedule || []).some((s) => s.date === date));
   }
+
+  // Sap xep uu tien may cua Chu may Premium (is_premium === true) lên đầu tiên
+  machines.sort((a, b) => {
+    const aPrem = a.owner_id?.is_premium ? 1 : 0;
+    const bPrem = b.owner_id?.is_premium ? 1 : 0;
+    return bPrem - aPrem;
+  });
 
   res.json({ machines });
 });
@@ -49,7 +58,7 @@ router.get('/:id', async (req, res) => {
 
   res.json({
     machine,
-    owner: owner ? { full_name: owner.full_name, phone: owner.phone, district: owner.district } : null,
+    owner: owner ? { full_name: owner.full_name, phone: owner.phone, district: owner.district, avatar_url: owner.avatar_url, is_premium: owner.is_premium } : null,
     reviews,
   });
 });

@@ -27,18 +27,18 @@ export default function PricingPolicy() {
               <Link to="/search" className="btn btn-outline btn-block" style={{ marginTop: 24 }}>Tìm máy ngay</Link>
             </div>
 
-            <div className="pricing-card featured">
-              <span className="badge-plan">Đối tác Chủ máy</span>
-              <h3>Dành cho Chủ máy cơ giới</h3>
-              <p className="small">Chủ sở hữu máy cày, máy gặt, drone...</p>
-              <div className="price-tag">5% <span>/ đơn thành công</span></div>
+            <div className="pricing-card featured" style={{ border: '2px solid var(--gold)' }}>
+              <span className="badge-plan" style={{ background: 'var(--gold)', color: 'var(--green-deep)' }}>👑 VIP Partner</span>
+              <h3>Gói Chủ Máy VIP Premium</h3>
+              <p className="small">Ưu tiên tối đa cho Chủ máy chuyên nghiệp</p>
+              <div className="price-tag">199.000đ <span>/ tháng</span></div>
               <ul style={{ paddingLeft: 20, lineHeight: 1.8, fontSize: 14, color: 'var(--ink-soft)' }}>
-                <li>Đăng tin máy nông nghiệp không giới hạn</li>
-                <li>Chỉ thu phí 5% khi đơn thuê hoàn tất</li>
-                <li>Hệ thống quản lý đơn & lịch rảnh thông minh</li>
-                <li>Hỗ trợ xử lý tranh chấp & bảo vệ quyền lợi</li>
+                <li><b>Ưu tiên hiển thị cao nhất</b> trên Tìm kiếm & Bản đồ</li>
+                <li>Badge <b>"⭐ Đối tác đáng tin cậy"</b> uy tín</li>
+                <li><b>Công cụ Phân tích thị trường</b> nhu cầu & giá 11 huyện</li>
+                <li><b>Đăng bài quảng cáo Banner</b> nổi bật tiếp thị dàn xe</li>
               </ul>
-              <Link to="/register" className="btn btn-primary btn-block" style={{ marginTop: 24 }}>Đăng ký ngay</Link>
+              <Link to="/owner" className="btn btn-primary btn-block" style={{ marginTop: 24 }}>Nâng cấp ngay</Link>
             </div>
           </div>
 

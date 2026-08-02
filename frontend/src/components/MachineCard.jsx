@@ -63,6 +63,28 @@ export default function MachineCard({ machine }) {
         {machine.rating_count > 0 && (
           <span className="badge badge-gold">★ {Number(machine.rating_avg).toFixed(1)}</span>
         )}
+
+        {/* Trusted Partner / VIP Owner Badge */}
+        {machine.owner_id?.is_premium && (
+          <span style={{
+            position: 'absolute',
+            bottom: 10,
+            left: 10,
+            background: 'linear-gradient(135deg, #B9840C, #E8AC1F)',
+            color: '#153A2E',
+            padding: '3px 9px',
+            borderRadius: '999px',
+            fontSize: 11,
+            fontWeight: '800',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            zIndex: 2,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+          }}>
+            ⭐ Đối tác đáng tin cậy
+          </span>
+        )}
         {/* 
           📸 [HƯỚNG DẪN CHỌN ẢNH MACHINE CARD]:
           - Tỉ lệ khung hình: 4:3 (khuyến nghị ~800x600px cho màn Retina 2x).

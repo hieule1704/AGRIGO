@@ -109,18 +109,27 @@ export default function MachineDetail() {
             - Định dạng: WebP / PNG / JPEG (<50KB).
           */}
           <div className="card-box">
-            <h3>Thông tin Chủ máy</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <h3 style={{ margin: 0 }}>Thông tin Chủ máy</h3>
+              {owner?.is_premium && (
+                <span className="badge badge-gold" style={{ fontSize: 12, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  👑 Đối tác đáng tin cậy (VIP)
+                </span>
+              )}
+            </div>
             {owner ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--green-mid)', flexShrink: 0 }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', background: 'var(--green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: owner.is_premium ? '2px solid var(--gold)' : '1px solid var(--green-mid)', flexShrink: 0 }}>
                   {owner.avatar_url ? (
-                    <img src={owner.avatar_url} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/48?text=U'; }} />
+                    <img src={owner.avatar_url} alt={owner.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/52?text=U'; }} />
                   ) : (
-                    <span style={{ fontSize: 24 }}>👤</span>
+                    <span style={{ fontSize: 26 }}>👤</span>
                   )}
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontWeight: 'bold' }}>{owner.full_name}</p>
+                  <p style={{ margin: 0, fontWeight: 'bold' }}>
+                    {owner.full_name} {owner.is_premium && <span style={{ color: 'var(--gold-dark)', fontSize: 13 }}>⭐ Partner</span>}
+                  </p>
                   <p className="small" style={{ margin: '2px 0 0' }}>📍 {owner.district || 'Chưa cập nhật'} · 📞 {owner.phone || 'Ẩn'}</p>
                 </div>
               </div>
