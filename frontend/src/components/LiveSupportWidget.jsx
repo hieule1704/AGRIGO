@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const PRESET_FAQS = [
   {
@@ -16,6 +17,13 @@ const PRESET_FAQS = [
 ];
 
 export default function LiveSupportWidget() {
+  const location = useLocation();
+
+  // Hide live support widget on Admin dashboard routes (/admin)
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     {

@@ -15,7 +15,17 @@ export default function Header() {
       <div className="topbar">
         <div className="container">
           <span className="muted">🌾 Kết nối máy nông nghiệp khu vực An Giang & ĐBSCL</span>
-          <Link to="/register?role=owner">Bạn có máy? Đăng ký ngay</Link>
+          {!user ? (
+            <Link to="/register?role=owner">Bạn có máy? Đăng ký chủ máy ngay →</Link>
+          ) : user.role === 'owner' ? (
+            <Link to="/owner" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>
+              {user.is_premium ? '👑 VIP Partner Chủ máy' : '🚜 Kênh Chủ Máy'} ({user.full_name})
+            </Link>
+          ) : user.role === 'farmer' ? (
+            <span style={{ color: '#fff' }}>🌾 Nông dân: <b>{user.full_name}</b> ({user.phone || '0909123456'})</span>
+          ) : (
+            <span style={{ color: 'var(--gold)', fontWeight: 'bold' }}>🛡️ Quản trị viên: {user.full_name}</span>
+          )}
         </div>
       </div>
       <header className="header">
