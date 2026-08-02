@@ -72,15 +72,96 @@ router.patch('/users/:id/status', async (req, res) => {
   res.json({ user });
 });
 
-// GET /api/admin/bookings
-router.get('/bookings', async (req, res) => {
-  const bookings = await Booking.find()
-    .populate('machine_id', 'name district')
-    .populate('farmer_id', 'full_name')
-    .populate('owner_id', 'full_name')
-    .sort({ created_at: -1 })
-    .limit(200);
-  res.json({ bookings });
+// PUT /api/admin/machines/:id (Admin sua thong tin chuyen sau cua may)
+router.put('/machines/:id', async (req, res) => {
+  try {
+    const machine = await Machine.findById(req.params.id);
+    if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
+
+    const fields = ['name', 'description', 'brand', 'year_made', 'price_per_day', 'price_unit', 'district', 'address_detail', 'lat', 'lng', 'image_url', 'category_id', 'status'];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) machine[f] = req.body[f];
+    });
+
+    await machine.save();
+    const updated = await Machine.findById(machine._id)
+      .populate('category_id', 'name')
+      .populate('owner_id', 'full_name email phone');
+    res.json({ machine: updated });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi chỉnh sửa máy.', detail: err.message });
+  }
+});
+
+// DELETE /api/admin/machines/:id (Admin xoa may)
+router.delete('/machines/:id', async (req, res) => {
+  try {
+    const machine = await Machine.findById(req.params.id);
+    if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
+    await machine.deleteOne();
+    res.json({ ok: true, id: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi xóa máy.', detail: err.message });
+  }
+});
+
+// PUT /api/admin/users/:id (Admin sua thong tin nguoi dung & toggle VIP)
+router.put('/users/:id', async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+
+    const fields = ['full_name', 'phone', 'district', 'address', 'role', 'status', 'is_premium', 'avatar_url'];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) targetUser[f] = req.body[f];
+    });
+
+    if (req.body.is_premium === true && !targetUser.premium_expires_at) {
+      targetUser.premium_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
+
+    await targetUser.save();
+    res.json({ user: targetUser.toSafeJSON() });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi cập nhật người dùng.', detail: err.message });
+  }
+});
+
+// DELETE /api/admin/users/:id (Admin xoa tai khoan)
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+    if (targetUser.role === 'admin') return res.status(403).json({ error: 'Không thể xóa tài khoản Admin.' });
+    await targetUser.deleteOne();
+    res.json({ ok: true, id: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi xóa người dùng.' });
+  }
+});
+
+// PATCH /api/admin/bookings/:id/status (Admin doi trang thai don hang)
+router.patch('/bookings/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const booking = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!booking) return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
+    res.json({ booking });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi cập nhật trạng thái đơn.' });
+  }
+});
+
+// DELETE /api/admin/bookings/:id (Admin xoa don hang)
+router.delete('/bookings/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: 'Không tìm thấy đơn hàng.' });
+    await booking.deleteOne();
+    res.json({ ok: true, id: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi xóa đơn hàng.' });
+  }
 });
 
 module.exports = router;

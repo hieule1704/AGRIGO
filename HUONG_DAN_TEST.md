@@ -13,9 +13,10 @@ Mất mật khẩu chung cho tất cả tài khoản bên dưới là: **`123456
 | Vai trò | Email đăng nhập | Mật khẩu | Mô tả nhiệm vụ |
 | :--- | :--- | :--- | :--- |
 | 🌾 **Nông dân** | `farmer@agrigo.vn` | `123456` | Đặt lịch thuê máy, xem vị trí bản đồ, xem tổng tiền realtime, viết đánh giá. |
-| 🚜 **Chủ máy 1** | `owner@agrigo.vn` | `123456` | Đăng máy mới (có AI hỗ trợ mô tả), duyệt/từ chối đơn đặt lịch, xem doanh thu. |
+| 👑 **Chủ máy VIP** | `owner_vip@agrigo.vn` | `123456` | **Tài khoản VIP Partner sẵn có**: Máy xếp vị trí #1, xem Phân tích thị trường & Quảng cáo. |
+| 🚜 **Chủ máy 1** | `owner@agrigo.vn` | `123456` | Tài khoản thường: Đăng máy mới, duyệt đơn, trải nghiệm nút **Nâng cấp VIP**. |
 | 🚜 **Chủ máy 2** | `owner2@agrigo.vn` | `123456` | Quản lý phương tiện máy cấy, drone tại Tri Tôn. |
-| 🛡️ **Quản trị viên** | `admin@agrigo.vn` | `123456` | Duyệt bài đăng máy mới (có AI Moderation kiểm duyệt nội dung), khóa bài. |
+| 🛡️ **Quản trị viên** | `admin@agrigo.vn` | `123456` | Duyệt bài, **Sửa tên/thông tin máy chuyên sâu (Admin Full Control)**, **Gán/Hủy quyền VIP**. |
 
 ---
 

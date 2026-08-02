@@ -76,13 +76,13 @@ export default function MachineCard({ machine }) {
             borderRadius: '999px',
             fontSize: 11,
             fontWeight: '800',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
             zIndex: 2,
             display: 'inline-flex',
             alignItems: 'center',
             gap: 4,
           }}>
-            ⭐ Đối tác đáng tin cậy
+            ⭐ Đối tác VIP
           </span>
         )}
         {/* 

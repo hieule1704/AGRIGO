@@ -79,6 +79,17 @@ async function seedData() {
     district: "Thoại Sơn",
   });
 
+  const ownerVip = await User.create({
+    full_name: "Lê Văn VIP (Nông Cơ Châu Phú VIP)",
+    email: "owner_vip@agrigo.vn",
+    password_hash: pass,
+    role: "owner",
+    phone: "0909999888",
+    district: "Châu Phú",
+    is_premium: true,
+    premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  });
+
   const owner1 = await User.create({
     full_name: "Trần Văn Máy (Nông Cơ Châu Phú)",
     email: "owner@agrigo.vn",
@@ -86,8 +97,7 @@ async function seedData() {
     role: "owner",
     phone: "0908888111",
     district: "Châu Phú",
-    is_premium: true,
-    premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    is_premium: false,
   });
 
   const owner2 = await User.create({
@@ -126,7 +136,7 @@ async function seedData() {
     district: "Châu Đốc",
   });
 
-  const owners = [owner1, owner2, owner3, owner4, owner5];
+  const owners = [ownerVip, owner1, owner2, owner3, owner4, owner5];
 
   console.log("🌱 Tạo danh sách 35+ máy nông nghiệp bao phủ 11 huyện An Giang...");
 
@@ -302,7 +312,7 @@ async function seedData() {
   console.log("🌱 Tạo banner quảng cáo mẫu từ Chủ máy Premium...");
   await Advertisement.deleteMany({});
   await Advertisement.create({
-    owner_id: owner1._id,
+    owner_id: ownerVip._id,
     machine_id: createdMachines[0]._id,
     title: "🚜 Nông Cơ Châu Phú - Giảm 10% giá thuê Máy Cày & Máy Gặt vụ Hè Thu",
     description: "Dàn xe cơ giới đời mới Kubota & Yanmar sẵn sàng phục vụ bà con An Giang. Cam kết đúng giờ, không nâng giá!",

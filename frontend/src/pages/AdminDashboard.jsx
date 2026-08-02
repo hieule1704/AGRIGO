@@ -32,18 +32,71 @@ export default function AdminDashboard() {
     loadUsers();
   }
 
-  const [aiModResult, setAiModResult] = useState(null);
-  const [modLoadingId, setModLoadingId] = useState(null);
+  const [editMachine, setEditMachine] = useState(null);
+  const [editUser, setEditUser] = useState(null);
 
-  async function checkAiModerate(machine) {
-    setModLoadingId(machine._id);
+  async function handleUpdateMachine(e) {
+    e.preventDefault();
     try {
-      const res = await api.post('/ai/moderate-content', { name: machine.name, description: machine.description });
-      setAiModResult({ machineName: machine.name, ...res.result });
+      await api.put(`/admin/machines/${editMachine._id}`, editMachine);
+      setEditMachine(null);
+      loadMachines(machineFilter);
+      alert('Đã cập nhật thông tin máy thành công!');
     } catch (e) {
-      alert('Lỗi kiểm duyệt AI: ' + e.message);
-    } finally {
-      setModLoadingId(null);
+      alert('Lỗi cập nhật máy: ' + e.message);
+    }
+  }
+
+  async function handleDeleteMachine(id) {
+    if (!confirm('Bạn có chắc chắn muốn XÓA máy này khỏi hệ thống?')) return;
+    try {
+      await api.del(`/admin/machines/${id}`);
+      loadMachines(machineFilter);
+      loadStats();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function toggleUserVip(u) {
+    try {
+      const is_premium = !u.is_premium;
+      await api.put(`/admin/users/${u._id}`, { is_premium });
+      loadUsers();
+      alert(`Đã ${is_premium ? 'GÁN' : 'HỦY'} quyền VIP Premium cho tài khoản ${u.full_name}!`);
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function handleDeleteUser(id) {
+    if (!confirm('Bạn có chắc chắn muốn XÓA tài khoản người dùng này?')) return;
+    try {
+      await api.del(`/admin/users/${id}`);
+      loadUsers();
+      loadStats();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function handleBookingStatusChange(id, status) {
+    try {
+      await api.patch(`/admin/bookings/${id}/status`, { status });
+      loadBookings();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function handleDeleteBooking(id) {
+    if (!confirm('Bạn có chắc chắn muốn XÓA đơn hàng này?')) return;
+    try {
+      await api.del(`/admin/bookings/${id}`);
+      loadBookings();
+      loadStats();
+    } catch (e) {
+      alert(e.message);
     }
   }
 
@@ -52,7 +105,7 @@ export default function AdminDashboard() {
       <aside className="dash-side">
         <div className="who">Trang quản trị<br /><b style={{ color: '#fff' }}>AGRIGO Admin</b></div>
         <a href="#" className={tab === 'overview' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('overview'); }}>📊 Tổng quan</a>
-        <a href="#" className={tab === 'machines' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('machines'); }}>🚜 Duyệt máy</a>
+        <a href="#" className={tab === 'machines' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('machines'); }}>🚜 Quản lý máy</a>
         <a href="#" className={tab === 'users' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('users'); }}>👤 Người dùng</a>
         <a href="#" className={tab === 'bookings' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('bookings'); }}>📅 Đơn đặt lịch</a>
       </aside>
@@ -70,7 +123,7 @@ export default function AdminDashboard() {
             </div>
             {stats.pendingMachines > 0 && (
               <div className="alert alert-error" style={{ background: '#FCEFD1', color: '#8A5D00', borderColor: '#f2ddb0' }}>
-                Có {stats.pendingMachines} máy đang chờ duyệt. Vào tab "Duyệt máy" để xử lý.
+                Có {stats.pendingMachines} máy đang chờ duyệt. Vào tab "Quản lý máy" để xử lý.
               </div>
             )}
           </>
@@ -79,46 +132,98 @@ export default function AdminDashboard() {
         {tab === 'machines' && (
           <div className="card-box">
             <div className="flex-between" style={{ marginBottom: 14 }}>
-              <h3 style={{ margin: 0 }}>Danh sách máy</h3>
+              <h3 style={{ margin: 0 }}>Quản lý & Chỉnh sửa Chuyên sâu Máy Nông Nghiệp</h3>
               <select value={machineFilter} onChange={(e) => setMachineFilter(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)' }}>
                 <option value="pending">Chờ duyệt</option>
                 <option value="approved">Đã duyệt</option>
                 <option value="rejected">Từ chối</option>
-                <option value="">Tất cả</option>
+                <option value="">Tất cả máy</option>
               </select>
             </div>
-            <table className="data-table">
-              <thead><tr><th>Hình ảnh</th><th>Tên máy</th><th>Chủ máy</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th></th></tr></thead>
-              <tbody>
-                {machines.map((m) => (
-                  <tr key={m._id}>
-                    <td>
-                      {m.image_url ? (
-                        <img src={m.image_url} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} />
-                      ) : (
-                        <span style={{ fontSize: 24 }}>🚜</span>
-                      )}
-                    </td>
-                    <td><b>{m.name}</b><br /><span className="small">{m.category_id?.name}</span></td>
-                    <td>{m.owner_id?.full_name}<br /><span className="small">{m.owner_id?.phone}</span></td>
-                    <td>{m.district}</td>
-                    <td>{formatVND(m.price_per_day)}</td>
-                    <td><StatusPill status={m.status} /></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {m.status !== 'approved' && <button className="btn btn-primary btn-sm" onClick={() => setMachineStatus(m._id, 'approved')}>Duyệt</button>}
-                        {m.status !== 'rejected' && <button className="btn btn-danger btn-sm" onClick={() => setMachineStatus(m._id, 'rejected')}>Từ chối</button>}
-                        {m.status === 'approved' && <button className="btn btn-outline btn-sm" onClick={() => setMachineStatus(m._id, 'hidden')}>Ẩn</button>}
-                        <button className="btn btn-outline btn-sm" style={{ borderColor: 'var(--teal)', color: 'var(--teal)' }} onClick={() => checkAiModerate(m)} disabled={modLoadingId === m._id}>
-                          {modLoadingId === m._id ? '...' : '🛡️ AI Check'}
-                        </button>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead><tr><th>Hình ảnh</th><th>Tên máy & Loại</th><th>Chủ máy</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th>Thao tác Admin</th></tr></thead>
+                <tbody>
+                  {machines.map((m) => (
+                    <tr key={m._id}>
+                      <td>
+                        {m.image_url ? (
+                          <img src={m.image_url} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+                        ) : (
+                          <span style={{ fontSize: 24 }}>🚜</span>
+                        )}
+                      </td>
+                      <td><b>{m.name}</b><br /><span className="small">{m.category_id?.name}</span></td>
+                      <td>{m.owner_id?.full_name}<br /><span className="small">{m.owner_id?.phone}</span></td>
+                      <td>{m.district}</td>
+                      <td>{formatVND(m.price_per_day)}</td>
+                      <td><StatusPill status={m.status} /></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => setEditMachine(m)}>✏️ Sửa máy</button>
+                          {m.status !== 'approved' && <button className="btn btn-primary btn-sm" onClick={() => setMachineStatus(m._id, 'approved')}>Duyệt</button>}
+                          {m.status !== 'rejected' && <button className="btn btn-danger btn-sm" onClick={() => setMachineStatus(m._id, 'rejected')}>Từ chối</button>}
+                          <button className="btn btn-outline btn-sm" style={{ borderColor: 'var(--teal)', color: 'var(--teal)' }} onClick={() => checkAiModerate(m)} disabled={modLoadingId === m._id}>
+                            {modLoadingId === m._id ? '...' : '🛡️ AI Check'}
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteMachine(m._id)}>🗑️ Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Không có máy nào.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Modal chỉnh sửa máy chuyên sâu cho Admin */}
+            {editMachine && (
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                <div style={{ background: '#fff', padding: 24, borderRadius: 16, maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+                  <div className="flex-between" style={{ marginBottom: 16 }}>
+                    <h3 style={{ margin: 0 }}>🛠️ Chỉnh Sửa Máy (Admin Full Control)</h3>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditMachine(null)}>✖ Đóng</button>
+                  </div>
+                  <form onSubmit={handleUpdateMachine}>
+                    <div className="form-grid">
+                      <div className="field full">
+                        <label>Tên máy (Chỉnh sửa chuẩn tên, xóa ký tự thừa)</label>
+                        <input required value={editMachine.name} onChange={(e) => setEditMachine({ ...editMachine, name: e.target.value })} />
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Không có máy nào.</td></tr>}
-              </tbody>
-            </table>
+                      <div className="field">
+                        <label>Giá thuê / ngày (VNĐ)</label>
+                        <input type="number" required value={editMachine.price_per_day} onChange={(e) => setEditMachine({ ...editMachine, price_per_day: Number(e.target.value) })} />
+                      </div>
+                      <div className="field">
+                        <label>Khu vực (Huyện)</label>
+                        <input required value={editMachine.district} onChange={(e) => setEditMachine({ ...editMachine, district: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Thương hiệu</label>
+                        <input value={editMachine.brand || ''} onChange={(e) => setEditMachine({ ...editMachine, brand: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Trạng thái duyệt</label>
+                        <select value={editMachine.status} onChange={(e) => setEditMachine({ ...editMachine, status: e.target.value })}>
+                          <option value="pending">Chờ duyệt (pending)</option>
+                          <option value="approved">Đã duyệt (approved)</option>
+                          <option value="rejected">Từ chối (rejected)</option>
+                          <option value="hidden">Ẩn (hidden)</option>
+                        </select>
+                      </div>
+                      <div className="field full">
+                        <label>Mô tả chi tiết</label>
+                        <textarea value={editMachine.description || ''} onChange={(e) => setEditMachine({ ...editMachine, description: e.target.value })} rows={4} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                      <button type="submit" className="btn btn-primary btn-block">Lưu thay đổi máy</button>
+                      <button type="button" className="btn btn-outline" onClick={() => setEditMachine(null)}>Hủy</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
             {aiModResult && (
               <div style={{ marginTop: 20, padding: 16, background: 'var(--bg-light)', borderRadius: 12, border: '1px solid var(--green-mid)' }}>
@@ -141,51 +246,90 @@ export default function AdminDashboard() {
 
         {tab === 'users' && (
           <div className="card-box">
-            <h3>Người dùng</h3>
-            <table className="data-table">
-              <thead><tr><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Khu vực</th><th>Trạng thái</th><th></th></tr></thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u._id}>
-                    <td>{u.full_name}</td>
-                    <td>{u.email}</td>
-                    <td>{{ farmer: 'Nông dân', owner: 'Chủ máy', admin: 'Quản trị' }[u.role]}</td>
-                    <td>{u.district || '—'}</td>
-                    <td><StatusPill status={u.status} /></td>
-                    <td>
-                      {u.role !== 'admin' && (
-                        <button className={u.status === 'active' ? 'btn btn-danger btn-sm' : 'btn btn-outline btn-sm'} onClick={() => toggleUserStatus(u)}>
-                          {u.status === 'active' ? 'Khóa' : 'Mở khóa'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h3>Quản Lý Người Dùng & Gán Quyền VIP Premium</h3>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead><tr><th>Họ tên</th><th>Email & SĐT</th><th>Vai trò</th><th>Khu vực</th><th>Gói VIP</th><th>Trạng thái</th><th>Thao tác Admin</th></tr></thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u._id}>
+                      <td><b>{u.full_name}</b></td>
+                      <td>{u.email}<br /><span className="small">📞 {u.phone || 'Chưa có'}</span></td>
+                      <td>
+                        <span className="badge">
+                          {{ farmer: '🌾 Nông dân', owner: '🚜 Chủ máy', admin: '🛡️ Quản trị' }[u.role]}
+                        </span>
+                      </td>
+                      <td>{u.district || '—'}</td>
+                      <td>
+                        {u.is_premium ? (
+                          <span className="badge badge-gold">👑 VIP Partner</span>
+                        ) : (
+                          <span className="small muted">Cơ bản</span>
+                        )}
+                      </td>
+                      <td><StatusPill status={u.status} /></td>
+                      <td>
+                        {u.role !== 'admin' && (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button
+                              className={`btn btn-sm ${u.is_premium ? 'btn-outline' : 'btn-primary'}`}
+                              onClick={() => toggleUserVip(u)}
+                            >
+                              {u.is_premium ? '❌ Hủy VIP' : '⭐ Gán VIP'}
+                            </button>
+                            <button className={u.status === 'active' ? 'btn btn-danger btn-sm' : 'btn btn-outline btn-sm'} onClick={() => toggleUserStatus(u)}>
+                              {u.status === 'active' ? 'Khóa' : 'Mở khóa'}
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id)}>🗑️ Xóa</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {tab === 'bookings' && (
           <div className="card-box">
             <h3>Tất cả đơn đặt lịch</h3>
-            <table className="data-table">
-              <thead><tr><th>Máy</th><th>Nông dân</th><th>Chủ máy</th><th>Ngày thuê</th><th>Tổng tiền</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
-              <tbody>
-                {bookings.map((b) => (
-                  <tr key={b._id}>
-                    <td>{b.machine_id?.name}</td>
-                    <td>{b.farmer_id?.full_name}</td>
-                    <td>{b.owner_id?.full_name}</td>
-                    <td>{formatDate(b.start_date)} → {formatDate(b.end_date)}</td>
-                    <td>{formatVND(b.total_price)}</td>
-                    <td>{formatVND(b.commission_amount)}</td>
-                    <td><StatusPill status={b.status} /></td>
-                  </tr>
-                ))}
-                {bookings.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Chưa có đơn đặt lịch nào.</td></tr>}
-              </tbody>
-            </table>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead><tr><th>Máy</th><th>Nông dân</th><th>Chủ máy</th><th>Ngày thuê</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thao tác Admin</th></tr></thead>
+                <tbody>
+                  {bookings.map((b) => (
+                    <tr key={b._id}>
+                      <td><b>{b.machine_id?.name}</b></td>
+                      <td>{b.farmer_id?.full_name}</td>
+                      <td>{b.owner_id?.full_name}</td>
+                      <td>{formatDate(b.start_date)} → {formatDate(b.end_date)}</td>
+                      <td>{formatVND(b.total_price)}</td>
+                      <td><StatusPill status={b.status} /></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <select
+                            value={b.status}
+                            onChange={(e) => handleBookingStatusChange(b._id, e.target.value)}
+                            style={{ padding: '4px 8px', borderRadius: 6, fontSize: 12 }}
+                          >
+                            <option value="pending">Chờ nhận</option>
+                            <option value="accepted">Đã nhận</option>
+                            <option value="completed">Hoàn tất</option>
+                            <option value="rejected">Từ chối</option>
+                            <option value="cancelled">Đã hủy</option>
+                          </select>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteBooking(b._id)}>🗑️ Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {bookings.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Chưa có đơn đặt lịch nào.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </main>
