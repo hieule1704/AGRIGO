@@ -46,8 +46,19 @@ const CATEGORY_PLACEHOLDERS = {
   'may-xoi-dat': 'https://www.thietbim5s.vn/upload/images/may-xoi-dat-mini.jpg?w=800&auto=format&fit=crop&q=80',
 };
 
-async function seedData() {
-  console.log("🌱 Đang xoá dữ liệu cũ...");
+async function seedData({ force = false } = {}) {
+  const [userCount, machineCount] = await Promise.all([
+    User.countDocuments(),
+    Machine.countDocuments(),
+  ]);
+
+  if (!force && (userCount > 0 || machineCount > 0)) {
+    console.log(`🛡️ [BẢO TOÀN DỮ LIỆU] MongoDB đã có sẵn ${userCount} người dùng & ${machineCount} máy nông nghiệp.`);
+    console.log(`ℹ️ Bỏ qua lệnh nạp lại seed để GIỮ NGUYÊN tài khoản mới tạo, máy mới đăng & ảnh upload của bạn!`);
+    return { seeded: false, reason: 'data_exists', userCount, machineCount };
+  }
+
+  console.log("🌱 Database trống hoặc ép buộc seed. Đang nạp dữ liệu mẫu ban đầu...");
   await Promise.all([
     User.deleteMany({}),
     Category.deleteMany({}),

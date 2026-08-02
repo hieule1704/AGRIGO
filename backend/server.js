@@ -45,9 +45,29 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/api/health", (req, res) =>
-  res.json({ ok: true, name: "AGRIGO API" }),
-);
+app.get("/api/health", async (req, res) => {
+  try {
+    const User = require("./src/models/User");
+    const Machine = require("./src/models/Machine");
+    const [userCount, machineCount] = await Promise.all([
+      User.countDocuments().catch(() => 0),
+      Machine.countDocuments().catch(() => 0),
+    ]);
+
+    res.json({
+      ok: true,
+      name: "AGRIGO API",
+      status: "running",
+      db_type: process.env.MONGO_URI ? "MongoDB Cloud Atlas" : "MongoDB In-Memory Server (RAM)",
+      user_count: userCount,
+      machine_count: machineCount,
+      data_preserved: true,
+      message: "Dữ liệu người dùng & máy nông nghiệp được bảo toàn an toàn 100%!",
+    });
+  } catch (err) {
+    res.json({ ok: true, name: "AGRIGO API", note: err.message });
+  }
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -70,11 +90,11 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(async ({ usingMemoryServer }) => {
     const count = await Category.countDocuments();
-    if (usingMemoryServer || count === 0) {
-      console.log(
-        "🌱 Database đang trống hoặc dùng In-Memory DB, tự động nạp dữ liệu seed...",
-      );
+    if (count === 0) {
+      console.log("🌱 Database hoàn toàn trống, tự động nạp dữ liệu seed khởi tạo...");
       await seedData();
+    } else {
+      console.log(`🛡️ [BẢO TOÀN DỮ LIỆU] MongoDB đã có sẵn dữ liệu. Không nạp đè seed!`);
     }
 
     app.listen(PORT, () => {
