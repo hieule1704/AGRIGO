@@ -198,4 +198,15 @@ router.delete('/bookings/:id', async (req, res) => {
   }
 });
 
+// POST /api/admin/smart-seed (Kích hoạt Smart Seed dữ liệu mẫu & bảo tồn ảnh người dùng)
+router.post('/smart-seed', async (req, res) => {
+  try {
+    const { runSmartSeed } = require('../smartSeed');
+    const result = await runSmartSeed();
+    res.json({ message: 'Smart Seed hoàn tất thành công! Dữ liệu tùy chỉnh của bạn đã được bảo tồn an toàn.', result });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi kích hoạt Smart Seed.', detail: err.message });
+  }
+});
+
 module.exports = router;

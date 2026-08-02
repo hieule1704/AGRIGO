@@ -189,6 +189,34 @@ export default function AdminDashboard() {
       <main className="dash-main">
         {tab === 'overview' && stats && (
           <>
+            <div className="card-box" style={{ background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff', marginBottom: 20, border: '2px solid var(--gold)' }}>
+              <div className="flex-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <h3 style={{ margin: '0 0 6px', color: 'var(--gold)' }}>🛡️ Bảng Điều Khiển Quản Trị Hệ Thống AGRIGO Platform</h3>
+                  <p style={{ margin: 0, fontSize: 13.5, color: '#E2E8F0', maxWidth: 640 }}>
+                    Kiểm soát 100% dữ liệu tài khoản, duyệt phương tiện cơ giới, giám sát đơn hàng & bảo tồn dữ liệu tùy chỉnh MongoDB Atlas.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ background: 'var(--gold)', color: 'var(--green-deep)', fontWeight: 'bold', padding: '10px 18px', border: 'none' }}
+                  onClick={async () => {
+                    if (!confirm('Bạn có muốn chạy Smart Seed dữ liệu mẫu phong phú cho 11 huyện An Giang? (Hệ thống sẽ bảo tồn 100% ảnh tùy chỉnh của tài khoản VIP & le hieu!)')) return;
+                    try {
+                      const res = await api.post('/admin/smart-seed');
+                      alert(res.message || '🎉 Smart Seed bảo tồn dữ liệu thành công!');
+                      loadStats();
+                    } catch (e) {
+                      alert('❌ Lỗi Smart Seed: ' + e.message);
+                    }
+                  }}
+                >
+                  🌱 Kích Hoạt Smart Seed & Bảo Tồn Data Atlas
+                </button>
+              </div>
+            </div>
+
             <div className="stat-grid">
               <div className="stat-card"><div className="num">{stats.userCount}</div><div className="lbl">Tổng người dùng ({stats.farmerCount} nông dân · {stats.ownerCount} chủ máy)</div></div>
               <div className="stat-card"><div className="num">{stats.machineCount}</div><div className="lbl">Máy đã đăng</div></div>
