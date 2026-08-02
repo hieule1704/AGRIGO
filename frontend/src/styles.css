@@ -172,15 +172,17 @@ button{font-family:inherit;cursor:pointer;}
 .cat-card .name{font-weight:700;font-size:13.5px;}
 
 /* ---------- Machine cards ---------- */
-.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:stretch;}
 .machine-card{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);
   overflow:hidden;box-shadow:var(--shadow-card);transition:.15s;display:flex;flex-direction:column;
+  height:100%;
 }
 .machine-card:hover{box-shadow:var(--shadow-pop);transform:translateY(-2px);}
 .machine-card .thumb{
-  aspect-ratio:4/3;background:linear-gradient(135deg,var(--green-soft),#f2ead0);
+  aspect-ratio:4/3;width:100%;overflow:hidden;background:linear-gradient(135deg,var(--green-soft),#f2ead0);
   display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--green-mid);position:relative;
+  flex-shrink:0;
 }
 .machine-card .thumb img{width:100%;height:100%;object-fit:cover;}
 .badge{
@@ -192,10 +194,17 @@ button{font-family:inherit;cursor:pointer;}
   position:absolute;top:10px;right:10px;z-index:2;
 }
 .badge-gold{background:var(--gold);color:var(--green-deep);}
-.machine-card .body{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column;gap:6px;}
-.machine-card .cat{font-size:11.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em;}
-.machine-card h3{font-size:15.5px;margin:0;font-weight:700;line-height:1.3;}
-.machine-card .loc{font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;}
+.machine-card .body{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column;}
+.machine-card .cat{font-size:11.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;}
+.machine-card h3{
+  font-size:15.5px;margin:0 0 6px;font-weight:700;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  min-height:2.6em;
+}
+.machine-card .loc{
+  font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;
+  margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .rating{font-size:12.5px;font-weight:700;color:var(--green-deep);display:flex;align-items:center;gap:4px;}
 .rating .star{color:var(--gold-dark);}
 .price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;border-top:1px dashed var(--line);}
