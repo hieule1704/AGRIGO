@@ -57,8 +57,8 @@ export default function AdBannerSlider({ district }) {
               🚜 Xem ngay & Đặt lịch
             </Link>
             {ad.owner_id && (
-              <span className="small" style={{ opacity: 0.85, background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: 8 }}>
-                📞 Chủ máy: {ad.owner_id.full_name} ({ad.owner_id.phone || 'Đã xác minh'})
+              <span className="small" style={{ color: '#ffffff', fontWeight: '500', background: 'rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.3)' }}>
+                📞 Chủ máy: <b>{ad.owner_id.full_name}</b> ({ad.owner_id.phone || 'Đã xác minh'})
               </span>
             )}
           </div>

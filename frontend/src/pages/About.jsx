@@ -143,7 +143,7 @@ export default function About() {
               <RouterLink to="/search" className="btn btn-primary" style={{ padding: '12px 26px', fontSize: 15 }}>
                 🌾 Tìm Máy Thuê Ngay
               </RouterLink>
-              <RouterLink to="/register?role=owner" className="btn btn-outline" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)', padding: '12px 26px', fontSize: 15 }}>
+              <RouterLink to="/register?role=owner" className="btn" style={{ color: 'var(--green-deep)', background: '#ffffff', border: '1px solid #ffffff', fontWeight: 'bold', padding: '12px 26px', fontSize: 15 }}>
                 🚜 Đăng Ký Chủ Máy Cơ Giới
               </RouterLink>
             </div>
