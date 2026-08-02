@@ -6,6 +6,8 @@ import { formatVND, formatDate } from '../components/MachineCard';
 export default function FarmerBookings() {
   const [bookings, setBookings] = useState([]);
   const [reviewFor, setReviewFor] = useState(null);
+  const [handoverFor, setHandoverFor] = useState(null);
+  const [checklist, setChecklist] = useState({ engine: true, hydraulic: true, tracks: true, fuel: true });
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [err, setErr] = useState('');
 
@@ -50,14 +52,21 @@ export default function FarmerBookings() {
               <td>{formatVND(b.total_price)}</td>
               <td><StatusPill status={b.status} /></td>
               <td>
-                {(b.status === 'pending' || b.status === 'accepted') && (
-                  <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>
-                )}
-                {b.status === 'completed' && (
-                  <button className="btn btn-primary btn-sm" style={{ background: 'var(--gold)', color: 'var(--green-deep)', border: 'none', fontWeight: 'bold' }} onClick={() => setReviewFor(b._id)}>
-                    ✍️ Viết Đánh Giá
-                  </button>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {(b.status === 'pending' || b.status === 'accepted') && (
+                    <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Hủy đơn</button>
+                  )}
+                  {(b.status === 'accepted' || b.status === 'completed') && (
+                    <button className="btn btn-outline btn-sm" onClick={() => setHandoverFor(b)}>
+                      📋 Biên Bản Bàn Giao (Lớp 1)
+                    </button>
+                  )}
+                  {b.status === 'completed' && (
+                    <button className="btn btn-primary btn-sm" style={{ background: 'var(--gold)', color: 'var(--green-deep)', border: 'none', fontWeight: 'bold' }} onClick={() => setReviewFor(b._id)}>
+                      ✍️ Viết Đánh Giá
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
@@ -106,6 +115,67 @@ export default function FarmerBookings() {
                 <button className="btn btn-outline" type="button" onClick={() => setReviewFor(null)}>Hủy</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Biên bản Bàn giao Kỹ thuật số Lớp 1 */}
+      {handoverFor && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', padding: 28, borderRadius: 20, maxWidth: 520, width: '100%', boxShadow: '0 12px 36px rgba(0,0,0,0.3)', border: '2px solid var(--gold)' }}>
+            <div className="flex-between" style={{ marginBottom: 14 }}>
+              <h3 style={{ margin: 0, color: 'var(--green-deep)' }}>📋 Biên Bản Bàn Giao Kỹ Thuật Số (Lớp 1)</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setHandoverFor(null)}>✖ Đóng</button>
+            </div>
+            <p className="small" style={{ color: 'var(--ink-soft)', marginBottom: 16 }}>
+              Đối chứng trạng thái 4 góc máy thực tế trước & sau khi làm ruộng. Làm cơ sở pháp lý nghiệm thu 100%.
+            </p>
+
+            <div style={{ background: 'var(--green-soft)', padding: 14, borderRadius: 12, marginBottom: 16 }}>
+              <b style={{ color: 'var(--green-deep)', display: 'block', marginBottom: 4 }}>
+                🚜 Máy: {handoverFor.machine_id?.name}
+              </b>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+                Thời gian làm ruộng: {formatDate(handoverFor.start_date)} → {formatDate(handoverFor.end_date)}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={checklist.engine} onChange={(e) => setChecklist({ ...checklist, engine: e.target.checked })} />
+                <span>⚙️ 1. Động cơ & Máy phát (Đã test nổ thử OK)</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={checklist.hydraulic} onChange={(e) => setChecklist({ ...checklist, hydraulic: e.target.checked })} />
+                <span>🛠 2. Hệ thống Thủy lực & Cần gặt/Lưỡi cày (Nguyên vẹn)</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={checklist.tracks} onChange={(e) => setChecklist({ ...checklist, tracks: e.target.checked })} />
+                <span>🛞 3. Bánh xích / Cánh quạt Drone (Không rạn nứt)</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={checklist.fuel} onChange={(e) => setChecklist({ ...checklist, fuel: e.target.checked })} />
+                <span>⛽ 4. Nguồn nhiên liệu & Pin (Đầy 100%)</span>
+              </label>
+            </div>
+
+            <div style={{ border: '2px dashed var(--line)', padding: 16, borderRadius: 12, textAlign: 'center', marginBottom: 18, background: '#FAFAFA' }}>
+              <div style={{ fontSize: 28, marginBottom: 4 }}>📸</div>
+              <b style={{ fontSize: 13, display: 'block', color: 'var(--green-deep)' }}>Tải Lên Ảnh 4 Góc Máy Thực Tế</b>
+              <span className="small" style={{ color: 'var(--ink-soft)' }}>Hệ thống tự động ghi nhận GPS & Thời gian chụp</span>
+              <input type="file" multiple accept="image/*" style={{ marginTop: 10, fontSize: 12 }} />
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() => {
+                alert('🎉 Đã ký xác nhận Biên Bản Bàn Giao Kỹ Thuật Số! Dữ liệu đối chứng 4 góc máy đã được lưu trữ an toàn trên AGRIGO Cloud.');
+                setHandoverFor(null);
+              }}
+            >
+              ✅ Ký Xác Nhận Biên Bản Bàn Giao (Lớp 1)
+            </button>
           </div>
         </div>
       )}

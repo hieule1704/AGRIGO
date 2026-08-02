@@ -73,10 +73,12 @@ export default function About() {
       {/* Value Proposition Grid */}
       <section className="section" style={{ padding: '60px 0' }}>
         <div className="container">
-          <div className="section-head text-center" style={{ textAlign: 'center', marginBottom: 44 }}>
-            <div className="eyebrow-label">GIÁ TRỊ CỐT LÕI</div>
-            <h2>Tại sao bà con tin chọn nền tảng AGRIGO?</h2>
-            <p style={{ maxWidth: 640, margin: '8px auto 0' }}>AGRIGO giải quyết bài toán thiếu hụt máy móc mùa vụ và nâng cao hiệu quả kinh tế nông nghiệp.</p>
+          <div className="section-head" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 44 }}>
+            <div>
+              <p className="eyebrow-label" style={{ textAlign: 'center' }}>GIÁ TRỊ CỐT LÕI</p>
+              <h2 style={{ textAlign: 'center', margin: '4px 0 8px' }}>Tại sao bà con tin chọn nền tảng AGRIGO?</h2>
+              <p style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>AGRIGO giải quyết bài toán thiếu hụt máy móc mùa vụ và nâng cao hiệu quả kinh tế nông nghiệp.</p>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 50 }}>

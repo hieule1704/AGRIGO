@@ -4,6 +4,7 @@ import { api, resolveImageUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { categoryIcon, formatVND, formatDate, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
+import VisualAvailabilityCalendar from '../components/VisualAvailabilityCalendar';
 
 export default function MachineDetail() {
   const { id } = useParams();
@@ -188,20 +189,10 @@ export default function MachineDetail() {
           <div className="price-big">{formatVND(machine.price_per_day)} <span className="small">/ {machine.price_unit}</span></div>
           <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '16px 0' }} />
 
-          {machine.schedule && machine.schedule.filter((s) => s.status === 'booked' || s.status === 'blocked').length > 0 && (
-            <div style={{ marginBottom: 16, background: 'var(--bg-light)', padding: 12, borderRadius: 8, fontSize: 13 }}>
-              <b style={{ color: 'var(--green-deep)' }}>📅 Lịch bận đã có của máy:</b>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                {machine.schedule
-                  .filter((s) => s.status === 'booked' || s.status === 'blocked')
-                  .map((s, idx) => (
-                    <span key={idx} style={{ background: s.status === 'blocked' ? '#718096' : 'var(--danger)', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>
-                      {s.date} {s.status === 'blocked' ? '(Khóa)' : '(Đã đặt)'}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          )}
+          {/* Lịch Rảnh / Bận Trực Quan Dạng Chấm Xanh Đỏ */}
+          <div style={{ marginBottom: 16 }}>
+            <VisualAvailabilityCalendar machine={machine} />
+          </div>
 
           {err && <div className="alert alert-error">{err}</div>}
           {ok && <div className="alert alert-success">{ok}</div>}
@@ -367,12 +358,29 @@ export default function MachineDetail() {
                   <p className="small" style={{ margin: '0 0 16px', color: 'var(--ink-soft)' }}>
                     Ví điện tử Momo / ZaloPay đang kết nối sẵn sàng cho đơn đặt máy.
                   </p>
-                  <div style={{ background: '#FFFDF5', padding: 14, borderRadius: 12, border: '1px solid var(--gold)', marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 'bold' }}>TỔNG THANH TOÁN QUA VÍ:</div>
-                    <div style={{ fontSize: 22, color: 'var(--green-deep)', fontWeight: '800', marginTop: 2 }}>
-                      {formatVND(numDays * machine.price_per_day)}
+                  {numDays > 0 && (
+                    <div style={{ background: '#FFFDF5', padding: 14, borderRadius: 12, border: '1px solid var(--gold)', margin: '14px 0', fontSize: 13 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span>Phí thuê máy ({numDays} ngày):</span>
+                        <b>{formatVND(numDays * machine.price_per_day)}</b>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#059669' }}>
+                        <span>🛡️ Tiền thế chân rủi ro (Lớp 2):</span>
+                        <b>+500.000đ</b>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 8, fontStyle: 'italic' }}>
+                        * (Sẽ hoàn lại 100% ngay khi nghiệm thu trả máy không hỏng hóc)
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, color: '#B9840C' }}>
+                        <span>⚡ Bảo hiểm chuyến thuê PJICO (1.5%):</span>
+                        <b>+{formatVND(Math.round(numDays * machine.price_per_day * 0.015))}</b>
+                      </div>
+                      <div style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: '800', color: 'var(--green-deep)' }}>
+                        <span>TỔNG CỌC & THANH TOÁN:</span>
+                        <span>{formatVND((numDays * machine.price_per_day) + 500000 + Math.round(numDays * machine.price_per_day * 0.015))}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <button
                     type="button"
                     className="btn btn-primary btn-block"

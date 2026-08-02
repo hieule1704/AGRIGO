@@ -27,7 +27,8 @@ const MachineSchema = new mongoose.Schema(
     images: [{ type: String }], // anh phu, de mo rong sau nay
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'hidden'], default: 'pending' },
     rating_avg: { type: Number, default: 0 },
-    rating_count: { type: Number, default: 0 },
+    available_start_date: { type: String, default: '' },
+    available_end_date: { type: String, default: '' },
     schedule: [ScheduleEntrySchema],
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

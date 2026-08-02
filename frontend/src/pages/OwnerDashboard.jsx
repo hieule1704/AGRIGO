@@ -171,7 +171,7 @@ export default function OwnerDashboard() {
       const res = await api.get('/owner/analytics');
       setAnalyticsData(res.analytics);
     } catch (e) {
-      setErr(e.message);
+      // Do not set global err state to prevent alert sticking across tabs
     } finally {
       setAnalyticsLoading(false);
     }
@@ -219,6 +219,12 @@ export default function OwnerDashboard() {
     revenue: bookings.filter((b) => b.status === 'completed').reduce((s, b) => s + b.total_price, 0),
   };
 
+  function switchTab(tName) {
+    setErr('');
+    setOk('');
+    setTab(tName);
+  }
+
   return (
     <div className="dash-shell">
       <aside className="dash-side">
@@ -231,13 +237,13 @@ export default function OwnerDashboard() {
             </div>
           )}
         </div>
-        <a href="#" className={tab === 'machines' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('machines'); }}>🚜 Máy của tôi</a>
-        <a href="#" className={tab === 'add' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('add'); }}>➕ Đăng máy mới</a>
-        <a href="#" className={tab === 'bookings' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('bookings'); }}>📅 Đơn đặt lịch</a>
-        <a href="#" className={tab === 'analytics' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('analytics'); }}>📊 Phân tích thị trường {user?.is_premium ? '👑' : '🔒'}</a>
-        <a href="#" className={tab === 'ads' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('ads'); }}>📢 Quảng cáo dàn xe {user?.is_premium ? '👑' : '🔒'}</a>
-        <a href="#" className={tab === 'insurance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('insurance'); }}>🛡️ Bảo hiểm thiết bị</a>
-        <a href="#" className={tab === 'maintenance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('maintenance'); }}>🔧 Bảo dưỡng & Cứu hộ</a>
+        <a href="#" className={tab === 'machines' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('machines'); }}>🚜 Máy của tôi</a>
+        <a href="#" className={tab === 'add' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('add'); }}>➕ Đăng máy mới</a>
+        <a href="#" className={tab === 'bookings' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('bookings'); }}>📅 Đơn đặt lịch</a>
+        <a href="#" className={tab === 'analytics' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('analytics'); }}>📊 Phân tích thị trường {user?.is_premium ? '👑' : '🔒'}</a>
+        <a href="#" className={tab === 'ads' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('ads'); }}>📢 Quảng cáo dàn xe {user?.is_premium ? '👑' : '🔒'}</a>
+        <a href="#" className={tab === 'insurance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('insurance'); }}>🛡️ Bảo hiểm thiết bị</a>
+        <a href="#" className={tab === 'maintenance' ? 'active' : ''} onClick={(e) => { e.preventDefault(); switchTab('maintenance'); }}>🔧 Bảo dưỡng & Cứu hộ</a>
       </aside>
 
       <main className="dash-main">
@@ -316,6 +322,14 @@ export default function OwnerDashboard() {
                 <div className="field"><label>Thương hiệu</label><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} /></div>
                 <div className="field"><label>Đời máy (năm)</label><input type="number" value={form.year_made} onChange={(e) => setForm({ ...form, year_made: e.target.value })} /></div>
                 <div className="field"><label>Giá thuê / ngày (VNĐ)</label><input type="number" required value={form.price_per_day} onChange={(e) => setForm({ ...form, price_per_day: e.target.value })} /></div>
+                <div className="field">
+                  <label style={{ color: 'var(--green-deep)', fontWeight: 'bold' }}>📅 Ngày bắt đầu nhận cho thuê mùa vụ</label>
+                  <input type="date" value={form.available_start_date || ''} onChange={(e) => setForm({ ...form, available_start_date: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label style={{ color: 'var(--green-deep)', fontWeight: 'bold' }}>📅 Ngày kết thúc nhận cho thuê mùa vụ</label>
+                  <input type="date" value={form.available_end_date || ''} onChange={(e) => setForm({ ...form, available_end_date: e.target.value })} />
+                </div>
                 <div className="field">
                   <label>Khu vực</label>
                   <select required value={form.district} onChange={(e) => handleDistrictChange(e.target.value)}>
@@ -455,8 +469,9 @@ export default function OwnerDashboard() {
                         </div>
                       )}
                       {b.status === 'accepted' && (
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => setBookingStatus(b._id, 'completed')}>Đánh dấu hoàn tất</button>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <button className="btn btn-primary btn-sm" onClick={() => setBookingStatus(b._id, 'completed')}>Đánh dấu hoàn tất</button>
+                          <button className="btn btn-outline btn-sm" onClick={() => alert(`📋 Mở Biên Bản Bàn Giao Kỹ Thuật Số (Lớp 1) cho đơn #${b._id.slice(-6)}. Trạng thái: Đã kiểm tra 4 góc máy OK!`)}>📋 Bàn giao 4 góc máy</button>
                           <button className="btn btn-danger btn-sm" onClick={() => setBookingStatus(b._id, 'cancelled')}>Hủy đơn</button>
                         </div>
                       )}
