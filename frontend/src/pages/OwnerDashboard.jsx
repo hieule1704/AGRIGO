@@ -6,7 +6,7 @@ import { formatVND, formatDate } from '../components/MachineCard';
 import LocationPickerMap from '../components/LocationPickerMap';
 
 export default function OwnerDashboard() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [tab, setTab] = useState('machines');
   const [machines, setMachines] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -141,19 +141,27 @@ export default function OwnerDashboard() {
   const [adForm, setAdForm] = useState({ title: '', description: '', banner_url: '', machine_id: '', target_district: '' });
   const [adSubmitting, setAdSubmitting] = useState(false);
 
+  const [upgradingVip, setUpgradingVip] = useState(false);
+
   useEffect(() => {
     if (tab === 'analytics') loadAnalytics();
     if (tab === 'ads') loadAds();
   }, [tab]);
 
   async function handleUpgradeVip() {
-    setErr(''); setOk('');
+    setErr(''); setOk(''); setUpgradingVip(true);
     try {
       const res = await api.post('/owner/subscribe-premium');
-      setOk(res.message || 'Đã nâng cấp VIP thành công!');
-      setTimeout(() => window.location.reload(), 1200);
+      if (res.user) {
+        setUser(res.user);
+      }
+      setOk(res.message || 'Đã kích hoạt thành công Gói VIP Partner!');
+      alert('🎉 ' + (res.message || 'Chúc mừng! Bạn đã nâng cấp thành công Gói VIP Partner 30 ngày!'));
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || 'Không thể nâng cấp VIP.');
+      alert('❌ Lỗi nâng cấp VIP: ' + e.message);
+    } finally {
+      setUpgradingVip(false);
     }
   }
 
@@ -245,8 +253,8 @@ export default function OwnerDashboard() {
               </p>
             </div>
             {!user?.is_premium && (
-              <button type="button" className="btn btn-primary" onClick={handleUpgradeVip} style={{ padding: '10px 20px', fontWeight: 'bold' }}>
-                🚀 Nâng cấp VIP Ngay (Demo 199.000đ)
+              <button type="button" className="btn btn-primary" onClick={handleUpgradeVip} disabled={upgradingVip} style={{ padding: '10px 20px', fontWeight: 'bold' }}>
+                {upgradingVip ? '⏳ Đang kích hoạt...' : '🚀 Nâng cấp VIP Ngay (Demo 199.000đ)'}
               </button>
             )}
           </div>
