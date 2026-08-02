@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 
 export default function Register() {
   const { register } = useAuth();
@@ -29,6 +30,10 @@ export default function Register() {
         <a href="#" className={role === 'farmer' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setParams({ role: 'farmer' }); }}>Tôi là Nông dân</a>
         <a href="#" className={role === 'owner' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setParams({ role: 'owner' }); }}>Tôi là Chủ máy</a>
       </div>
+
+      {/* Demo Nút Đăng Nhập / Đăng Ký Mạng Xã Hội */}
+      <SocialLoginButtons actionText="Đăng ký" />
+
       {err && <div className="alert alert-error">{err}</div>}
       <form onSubmit={submit}>
         <div className="field"><label>Họ và tên</label><input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
@@ -36,7 +41,7 @@ export default function Register() {
         <div className="field"><label>Số điện thoại</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
         <div className="field"><label>Khu vực (huyện/thị xã)</label><input placeholder="VD: Thoại Sơn" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} /></div>
         <div className="field"><label>Mật khẩu</label><input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
-        <button className="btn btn-primary btn-block" type="submit">Đăng ký</button>
+        <button className="btn btn-primary btn-block" type="submit">Đăng ký bằng Email</button>
       </form>
       <p className="small" style={{ marginTop: 16, textAlign: 'center' }}>
         Đã có tài khoản? <Link to="/login" style={{ color: 'var(--green-deep)', fontWeight: 700 }}>Đăng nhập</Link>

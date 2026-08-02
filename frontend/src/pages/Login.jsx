@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 
 export default function Login() {
   const { login } = useAuth();
@@ -28,6 +29,10 @@ export default function Login() {
     <div className="auth-shell">
       <h1>Đăng nhập</h1>
       <p className="sub">Chào mừng quay lại AGRIGO.</p>
+
+      {/* Demo Nút Đăng Nhập Mạng Xã Hội */}
+      <SocialLoginButtons actionText="Đăng nhập" />
+
       {err && <div className="alert alert-error">{err}</div>}
       <form onSubmit={submit}>
         <div className="field">
@@ -38,13 +43,13 @@ export default function Login() {
           <label>Mật khẩu</label>
           <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         </div>
-        <button className="btn btn-primary btn-block" type="submit">Đăng nhập</button>
+        <button className="btn btn-primary btn-block" type="submit">Đăng nhập bằng Email</button>
       </form>
       <p className="small" style={{ marginTop: 16, textAlign: 'center' }}>
         Chưa có tài khoản? <Link to="/register" style={{ color: 'var(--green-deep)', fontWeight: 700 }}>Đăng ký ngay</Link>
       </p>
       <p className="small" style={{ marginTop: 10, textAlign: 'center', opacity: .7 }}>
-        Tài khoản demo: farmer@agrigo.vn / owner@agrigo.vn / admin@agrigo.vn — mật khẩu: <b>123456</b>
+        Tài khoản demo: farmer@agrigo.vn / owner_vip@agrigo.vn / admin@agrigo.vn — mật khẩu: <b>123456</b>
       </p>
     </div>
   );
