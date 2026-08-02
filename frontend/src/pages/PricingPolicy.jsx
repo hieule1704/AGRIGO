@@ -12,14 +12,14 @@ export default function PricingPolicy() {
     <>
       {/* Header Banner */}
       <section className="hero" style={{ padding: '54px 0 70px', background: 'linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%)' }}>
-        <div className="container" style={{ textAlign: 'center', maxWidth: 800 }}>
-          <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 auto 14px' }}>
+        <div className="container hero-center">
+          <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 0 14px' }}>
             💵 MINH BẠCH CHI PHÍ — KHÔNG PHÍ ẨN
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25, textAlign: 'center' }}>
             Bảng Giá Dịch Vụ & Chính Sách Nền Tảng AGRIGO
           </h1>
-          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0 }}>
+          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0, textAlign: 'center' }}>
             Mô hình chi phí minh bạch, giúp nông dân dễ dàng tiếp cận máy nông nghiệp và giúp chủ máy tối ưu lợi nhuận từ dàn xe cơ giới tại An Giang.
           </p>
         </div>

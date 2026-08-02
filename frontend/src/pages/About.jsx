@@ -29,7 +29,7 @@ export default function About() {
               <RouterLink to="/search" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: 15 }}>
                 🔍 Khám phá 35+ Máy nông nghiệp
               </RouterLink>
-              <RouterLink to="/guide" className="btn btn-outline" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)', padding: '12px 24px', fontSize: 15 }}>
+              <RouterLink to="/guide" className="btn" style={{ color: 'var(--green-deep)', background: '#ffffff', border: '1px solid #ffffff', fontWeight: 'bold', padding: '12px 24px', fontSize: 15 }}>
                 📖 Xem Hướng Dẫn Vận Hành
               </RouterLink>
             </div>

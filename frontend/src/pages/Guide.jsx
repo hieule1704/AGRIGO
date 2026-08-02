@@ -15,14 +15,14 @@ export default function Guide() {
     <>
       {/* Header Hero */}
       <section className="hero" style={{ padding: '54px 0 70px', background: 'linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%)' }}>
-        <div className="container" style={{ textAlign: 'center', maxWidth: 800 }}>
-          <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 auto 14px' }}>
+        <div className="container hero-center">
+          <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 0 14px' }}>
             📖 CẨM NANG VẬN HÀNH DỄ DÀNG
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25, textAlign: 'center' }}>
             Hướng Dẫn Sử Dụng Nền Tảng AGRIGO
           </h1>
-          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0 }}>
+          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0, textAlign: 'center' }}>
             Quy trình từng bước đơn giản giúp Nông dân dễ dàng thuê máy sạ gặt và giúp Chủ máy quản lý vận hành phương tiện nông nghiệp hiệu quả.
           </p>
         </div>
