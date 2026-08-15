@@ -359,18 +359,76 @@ export default function MachineDetail() {
           </div>
 
           <div className="card-box">
-            <h3>Đánh giá từ nông dân</h3>
-            {reviews.length === 0 && <p className="small">Chưa có đánh giá nào cho máy này.</p>}
-            {reviews.map((r) => (
-              <div key={r._id} style={{ borderBottom: '1px solid var(--line)', padding: '12px 0' }}>
-                <div className="flex-between">
-                  <b>{r.farmer_id?.full_name}</b>
-                  <span className="rating"><span className="star">★</span> {r.rating}/5</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <h3 style={{ margin: 0 }}>💬 Đánh giá từ bà con nông dân ({reviews.length})</h3>
+              {reviews.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#FFFDF5', border: '1px solid var(--gold)', padding: '3px 10px', borderRadius: 999 }}>
+                  <span className="star" style={{ color: 'var(--gold-dark)', fontSize: 15 }}>★</span>
+                  <b style={{ color: 'var(--green-deep)', fontSize: 13.5 }}>{Number(machine.rating_avg).toFixed(1)} / 5</b>
                 </div>
-                <p className="small" style={{ margin: '6px 0 0' }}>{r.comment}</p>
-                <p className="small" style={{ opacity: .7 }}>{formatDate(r.created_at)}</p>
-              </div>
-            ))}
+              )}
+            </div>
+
+            {reviews.length === 0 && (
+              <p className="small" style={{ color: 'var(--ink-soft)', textAlign: 'center', padding: '16px 0' }}>
+                Chưa có đánh giá nào cho máy này.
+              </p>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {reviews.map((r) => (
+                <div
+                  key={r._id}
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #153A2E, #2D6A4F)',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        fontSize: 12.5,
+                      }}>
+                        {r.farmer_id?.full_name ? r.farmer_id.full_name.charAt(0).toUpperCase() : '🌾'}
+                      </div>
+                      <div>
+                        <b style={{ fontSize: 13, color: '#1F2937' }}>{r.farmer_id?.full_name || 'Nông dân'}</b>
+                        {r.farmer_id?.district && (
+                          <span style={{ fontSize: 11.5, color: '#6B7280', marginLeft: 6 }}>
+                            📍 {r.farmer_id.district}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, background: '#FEF3C7', padding: '2px 8px', borderRadius: 999, fontSize: 11.5, fontWeight: 'bold', color: '#92400E' }}>
+                      <span>★</span> {r.rating} / 5
+                    </div>
+                  </div>
+
+                  <p style={{ margin: '5px 0', fontSize: 12.8, color: '#374151', lineHeight: 1.45 }}>
+                    {r.comment}
+                  </p>
+
+                  <div style={{ fontSize: 11, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                    <span>🕒 {formatDate(r.created_at)}</span>
+                    <span>·</span>
+                    <span style={{ color: '#059669', fontWeight: '600' }}>✓ Đã thuê máy thực tế qua AGRIGO</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
