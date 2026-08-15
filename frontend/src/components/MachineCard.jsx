@@ -79,14 +79,20 @@ export default function MachineCard({ machine }) {
         />
       </div>
       <div className="body">
-        <div className="cat">{categoryIcon(cat.slug)} {cat.name}</div>
-        <h3>{machine.name}</h3>
-        <div className="loc">📍 {machine.district}</div>
+        <div className="cat" style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ flexShrink: 0, lineHeight: 1 }}>{categoryIcon(cat.slug)}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name}</span>
+        </div>
+        <h3 title={machine.name}>{machine.name}</h3>
+        <div className="loc" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ flexShrink: 0 }}>📍</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{machine.district}</span>
+        </div>
         <div className="price-row">
           <div className="price">{formatVND(machine.price_per_day)} <small>/ {machine.price_unit}</small></div>
           <div className="rating">
             {machine.rating_count > 0
-              ? <><span className="star">★</span> {Number(machine.rating_avg).toFixed(1)} ({machine.rating_count})</>
+              ? <><span className="star">★</span> {Number(machine.rating_avg).toFixed(1)} <span style={{ opacity: 0.7, fontWeight: 'normal', fontSize: 11 }}>({machine.rating_count})</span></>
               : <span className="small">Chưa có đánh giá</span>}
           </div>
         </div>

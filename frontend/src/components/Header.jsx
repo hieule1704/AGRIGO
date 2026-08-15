@@ -35,7 +35,9 @@ export default function Header() {
               src="/logo.png"
               alt="AGRIGO Logo"
               style={{
-                height: 42,
+                height: 40,
+                maxHeight: '100%',
+                maxWidth: '100%',
                 objectFit: 'contain',
                 background: 'transparent',
               }}
