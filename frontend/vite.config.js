@@ -8,11 +8,11 @@ export default defineConfig({
     proxy: {
       // Moi request /api/* tu frontend se duoc chuyen sang backend Express
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
     },

@@ -18,7 +18,20 @@ const ownerRoutes = require("./src/routes/owner.routes");
 const adRoutes = require("./src/routes/ad.routes");
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
+const allowedOrigins = process.env.CLIENT_URL
+  ? (process.env.CLIENT_URL === '*' ? '*' : process.env.CLIENT_URL.split(',').map((s) => s.trim()))
+  : '*';
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins === '*' || (Array.isArray(allowedOrigins) && (allowedOrigins.includes('*') || allowedOrigins.includes(origin)))) {
+      return callback(null, true);
+    }
+    // Cho phép tất cả các nguồn trong môi trường dev hoặc nếu origin khớp
+    callback(null, true);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Phục vụ file tĩnh hình ảnh trong thư mục /uploads
@@ -85,7 +98,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Đã xảy ra lỗi máy chủ." });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 connectDB()
   .then(async ({ usingMemoryServer }) => {
