@@ -58,18 +58,18 @@ export default function VisualAvailabilityCalendar({ machine, interactive = fals
       </div>
 
       {/* Dynamic Legend */}
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 11.5, marginBottom: 12, padding: '6px 10px', background: 'var(--bg-light)', borderRadius: 8 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 'bold' }}>
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12, marginBottom: 12, padding: '7px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: '600', color: '#065F46' }}>
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981', display: 'inline-block' }}></span>
-          🟢 Rảnh (Sẵn sàng)
+          Rảnh (Sẵn sàng)
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 'bold' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: '600', color: '#991B1B' }}>
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444', display: 'inline-block' }}></span>
-          🔴 Đã có khách thuê
+          Đã có khách thuê
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 'bold' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: '600', color: '#64748B' }}>
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#94A3B8', display: 'inline-block' }}></span>
-          ⚪ Khóa / Ngoài mùa
+          Khóa / Ngoài mùa
         </span>
       </div>
 
