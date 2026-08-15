@@ -5,6 +5,7 @@ import { categoryIcon, formatVND, CATEGORY_PLACEHOLDERS } from '../components/Ma
 import MachineMap from '../components/MachineMap';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import AdBannerSlider from '../components/AdBannerSlider';
+import { getBatchRoadDistances, calculateHaversineKm } from '../services/routing';
 
 export const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
 
@@ -20,23 +21,6 @@ export const DISTRICT_CENTERS = {
   'Tịnh Biên': [10.6000, 104.9500],
   'Châu Thành': [10.4333, 105.3167],
 };
-
-// Hàm tính khoảng cách đường chim bay theo công thức Haversine (km)
-export function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-  const R = 6371; // Bán kính Trái Đất (km)
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c;
-  return Math.round(d * 10) / 10; // làm tròn 1 chữ số thập phân
-}
 
 // Lấy tọa độ máy (nếu không có lat/lng riêng thì lấy tâm huyện)
 export function getMachineCoords(m) {
@@ -60,6 +44,9 @@ export default function Search() {
   const [userLocation, setUserLocation] = useState(null); // { lat: number, lng: number, name: string }
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState('');
+
+  // Lưu trữ khoảng cách đường bộ thực tế của từng máy
+  const [roadDistances, setRoadDistances] = useState({});
 
   const district = params.get('district') || '';
   const category = params.get('category') || '';
@@ -96,6 +83,17 @@ export default function Search() {
       .then((d) => setMachines(d.machines || []))
       .finally(() => setLoading(false));
   }, [district, category, date, sort]);
+
+  // Tự động tính khoảng cách đường bộ thực tế qua OSRM khi có vị trí nông dân
+  useEffect(() => {
+    if (userLocation && machines.length > 0) {
+      getBatchRoadDistances(userLocation, machines).then((dists) => {
+        setRoadDistances(dists || {});
+      });
+    } else {
+      setRoadDistances({});
+    }
+  }, [userLocation, machines]);
 
   function updateParam(key, value) {
     const next = new URLSearchParams(params);
@@ -150,14 +148,14 @@ export default function Search() {
     }
   }
 
-  // Sắp xếp danh sách máy (Hỗ trợ sắp xếp theo khoảng cách gần nhất)
+  // Sắp xếp danh sách máy (Hỗ trợ sắp xếp theo khoảng cách đường bộ gần nhất)
   let sortedMachines = [...machines];
   if (sort === 'nearest' && userLocation) {
     sortedMachines.sort((a, b) => {
-      const coordsA = getMachineCoords(a);
-      const coordsB = getMachineCoords(b);
-      const distA = coordsA ? calculateDistanceKm(userLocation.lat, userLocation.lng, coordsA[0], coordsA[1]) : 999999;
-      const distB = coordsB ? calculateDistanceKm(userLocation.lat, userLocation.lng, coordsB[0], coordsB[1]) : 999999;
+      const infoA = roadDistances[a._id];
+      const infoB = roadDistances[b._id];
+      const distA = infoA?.distanceKm ?? (a.lat && a.lng ? calculateHaversineKm(userLocation.lat, userLocation.lng, a.lat, a.lng) * 1.35 : 999999);
+      const distB = infoB?.distanceKm ?? (b.lat && b.lng ? calculateHaversineKm(userLocation.lat, userLocation.lng, b.lat, b.lng) * 1.35 : 999999);
       return (distA || 999999) - (distB || 999999);
     });
   }
@@ -228,7 +226,7 @@ export default function Search() {
         <button className="btn btn-primary" type="button" onClick={() => { }}>🔍 Tìm kiếm</button>
       </form>
 
-      {/* Thanh Ước lượng khoảng cách từ vị trí thực của Nông dân (Tính năng Google Maps đo khoảng cách) */}
+      {/* Thanh Ước lượng khoảng cách đường bộ thực tế (Công nghệ bản đồ số Google Maps/OpenStreetMap) */}
       <div style={{
         background: userLocation ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)' : '#FFFFFF',
         border: `1.5px solid ${userLocation ? '#16A34A' : 'var(--line)'}`,
@@ -262,15 +260,15 @@ export default function Search() {
           <div>
             <div style={{ fontSize: 14, fontWeight: '700', color: userLocation ? '#14532D' : 'var(--green-deep)' }}>
               {userLocation ? (
-                <>🎯 Đang đo khoảng cách từ: <span style={{ color: '#15803D', textDecoration: 'underline' }}>{userLocation.name}</span></>
+                <>🎯 Đang đo đường bộ thực tế từ: <span style={{ color: '#15803D', textDecoration: 'underline' }}>{userLocation.name}</span></>
               ) : (
-                <>🧭 Ước lượng khoảng cách từ vị trí của bạn tới máy</>
+                <>🛣️ Ước lượng khoảng cách & đường đi thực tế từ vị trí của bạn tới máy</>
               )}
             </div>
             <div style={{ fontSize: 12, color: userLocation ? '#166534' : 'var(--ink-soft)', marginTop: 2 }}>
               {userLocation
-                ? `Tọa độ GPS [${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}] · Khoảng cách thực tế hiển thị trên từng máy bên dưới.`
-                : `Nhấn "Lấy vị trí GPS" để tính xem mỗi chiếc máy cách ruộng của bạn bao nhiêu km.`}
+                ? `Tọa độ GPS [${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}] · Đang tính quãng đường xe chạy qua cầu, quốc lộ và tỉnh lộ thực tế.`
+                : `Nhấn "Lấy vị trí GPS" để tính xem xe máy/xe tải chở máy cần chạy bao nhiêu km đường bộ để tới ruộng của bạn.`}
             </div>
           </div>
         </div>
@@ -382,7 +380,7 @@ export default function Search() {
           }}
           style={{ borderColor: userLocation ? 'var(--green-mid)' : 'var(--line)' }}
         >
-          📍 Gần tôi nhất {userLocation ? '✓' : ''}
+          🛣️ Gần tôi nhất {userLocation ? '✓' : ''}
         </button>
         <button
           type="button"
@@ -404,7 +402,7 @@ export default function Search() {
       <div className="view-control-bar">
         <div className="count-info">
           Tìm thấy <b>{sortedMachines.length}</b> máy nông nghiệp · Trang <b>{page}</b>/<b>{totalPages}</b>
-          {userLocation && <span style={{ marginLeft: 8, color: 'var(--green-mid)', fontWeight: 'bold' }}>(Đang đo từ vị trí của bạn)</span>}
+          {userLocation && <span style={{ marginLeft: 8, color: 'var(--green-mid)', fontWeight: 'bold' }}>(Đang tính đường bộ từ vị trí của bạn)</span>}
         </div>
         <div className="view-mode-buttons">
           <button
@@ -459,7 +457,7 @@ export default function Search() {
                 updateParam('sort', 'nearest');
               }}
             >
-              📍 Gần tôi nhất {userLocation ? '✓' : ''}
+              🛣️ Gần tôi nhất {userLocation ? '✓' : ''}
             </a>
             <a
               href="#"
@@ -494,7 +492,7 @@ export default function Search() {
                 onClick={handleGetMyLocation}
                 style={{ fontSize: 12, padding: '6px 10px', height: 'auto' }}
               >
-                📍 Bật GPS đo khoảng cách
+                📍 Bật GPS đo đường bộ
               </button>
             )}
           </div>
@@ -539,7 +537,15 @@ export default function Search() {
                     {sortedMachines.length === 0 ? (
                       <div className="empty-state"><div className="ico">🔍</div>Không tìm thấy máy phù hợp.</div>
                     ) : (
-                      paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} compact={true} userLocation={userLocation} />)
+                      paginatedMachines.map((m) => (
+                        <MachineRow
+                          key={m._id}
+                          machine={m}
+                          compact={true}
+                          userLocation={userLocation}
+                          roadDistanceInfo={roadDistances[m._id]}
+                        />
+                      ))
                     )}
                   </div>
                 </div>
@@ -556,7 +562,14 @@ export default function Search() {
                       <button type="button" className="btn btn-outline btn-sm" onClick={() => setParams(new URLSearchParams())}>Xóa tất cả bộ lọc</button>
                     </div>
                   ) : (
-                    paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} userLocation={userLocation} />)
+                    paginatedMachines.map((m) => (
+                      <MachineRow
+                        key={m._id}
+                        machine={m}
+                        userLocation={userLocation}
+                        roadDistanceInfo={roadDistances[m._id]}
+                      />
+                    ))
                   )}
                 </div>
               )}
@@ -649,18 +662,22 @@ export default function Search() {
   );
 }
 
-// Component render 1 dòng máy nông nghiệp tối ưu chống vỡ layout trên mọi thiết bị và tích hợp đo khoảng cách
-function MachineRow({ machine: m, compact = false, userLocation = null }) {
+// Component render 1 dòng máy nông nghiệp tối ưu chống vỡ layout trên mọi thiết bị và tích hợp khoảng cách đường bộ
+function MachineRow({ machine: m, compact = false, userLocation = null, roadDistanceInfo = null }) {
   const cat = m.category_id || {};
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
   const isUnsplashDefault = m.image_url && m.image_url.includes('unsplash.com');
   const imgSrc = (!m.image_url || isUnsplashDefault) ? fallbackImg : resolveImageUrl(m.image_url);
 
-  // Tính khoảng cách tới máy nếu nông dân đã bật định vị vị trí
-  const coords = getMachineCoords(m);
-  const distanceKm = userLocation && coords
-    ? calculateDistanceKm(userLocation.lat, userLocation.lng, coords[0], coords[1])
-    : null;
+  // Lấy thông tin khoảng cách đường bộ thực tế
+  const info = roadDistanceInfo || (userLocation && m.lat && m.lng ? {
+    distanceKm: Math.round(calculateHaversineKm(userLocation.lat, userLocation.lng, m.lat, m.lng) * 1.35 * 10) / 10,
+    durationMin: Math.round(calculateHaversineKm(userLocation.lat, userLocation.lng, m.lat, m.lng) * 1.35 * 1.8),
+    isRealRoad: false,
+  } : null);
+
+  const distanceKm = info?.distanceKm ?? null;
+  const durationMin = info?.durationMin ?? null;
 
   return (
     <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''} reveal`}>
@@ -707,22 +724,22 @@ function MachineRow({ machine: m, compact = false, userLocation = null }) {
               <span className="loc-text">{m.district}{m.address_detail ? ` · ${m.address_detail}` : ''}</span>
             </span>
 
-            {/* Badge Khoảng cách GPS ước lượng */}
+            {/* Badge Khoảng cách Đường bộ Thực tế */}
             {distanceKm !== null && (
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 4,
-                background: distanceKm <= 10 ? '#E6F4EA' : distanceKm <= 30 ? '#FEF7E0' : '#F1F3F4',
-                color: distanceKm <= 10 ? '#137333' : distanceKm <= 30 ? '#B06000' : '#3C4043',
-                border: `1px solid ${distanceKm <= 10 ? '#CEEAD6' : distanceKm <= 30 ? '#FEEFC3' : '#DADCE0'}`,
+                background: distanceKm <= 12 ? '#E6F4EA' : distanceKm <= 35 ? '#FEF7E0' : '#F1F3F4',
+                color: distanceKm <= 12 ? '#137333' : distanceKm <= 35 ? '#B06000' : '#3C4043',
+                border: `1px solid ${distanceKm <= 12 ? '#CEEAD6' : distanceKm <= 35 ? '#FEEFC3' : '#DADCE0'}`,
                 padding: '2px 8px',
                 borderRadius: 999,
                 fontSize: 11,
                 fontWeight: '700',
                 whiteSpace: 'nowrap',
               }}>
-                🧭 Cách bạn: ~{distanceKm} km
+                🛣️ Đường bộ: ~{distanceKm} km
               </span>
             )}
           </div>
@@ -737,9 +754,9 @@ function MachineRow({ machine: m, compact = false, userLocation = null }) {
           <div className="tag-row">
             {m.brand && <span className="tag">{m.brand}</span>}
             {m.year_made && <span className="tag">Đời {m.year_made}</span>}
-            {distanceKm !== null && (
-              <span className="tag" style={{ background: '#E0F2FE', color: '#0369A1' }}>
-                🚗 ~{Math.round(distanceKm * 2)} phút di chuyển
+            {durationMin !== null && (
+              <span className="tag" style={{ background: '#E0F2FE', color: '#0369A1', fontWeight: 'bold' }}>
+                🚗 ~{durationMin} phút di chuyển
               </span>
             )}
           </div>
@@ -759,3 +776,5 @@ function MachineRow({ machine: m, compact = false, userLocation = null }) {
     </Link>
   );
 }
+
+

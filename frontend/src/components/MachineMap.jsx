@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import { categoryIcon, formatVND } from './MachineCard';
 import { resolveImageUrl } from '../api';
+import { getRealDrivingRoute } from '../services/routing';
 
 // Tọa độ trung tâm mặc định (Tỉnh An Giang / Miền Tây)
 const DEFAULT_CENTER = [10.45, 105.25];
@@ -57,28 +58,15 @@ function createUserIcon() {
   });
 }
 
-// Hàm tính khoảng cách km
-function calcDistance(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-  const R = 6371;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c * 10) / 10;
-}
-
-// Component tự động điều chỉnh tầm nhìn của Bản đồ khi danh sách máy/khu vực thay đổi
-function MapController({ center, zoom, machines, userLocation }) {
+// Component tự động điều chỉnh tầm nhìn của Bản đồ khi danh sách máy/khu vực/lộ trình thay đổi
+function MapController({ center, zoom, machines, userLocation, routePolyline }) {
   const map = useMap();
 
   useEffect(() => {
-    if (center && center[0] && center[1]) {
+    if (routePolyline && routePolyline.length > 1) {
+      const bounds = L.latLngBounds(routePolyline);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    } else if (center && center[0] && center[1]) {
       map.flyTo(center, zoom, { duration: 1.2 });
     } else {
       const pts = [];
@@ -97,14 +85,25 @@ function MapController({ center, zoom, machines, userLocation }) {
         map.flyTo(pts[0], 12, { duration: 1 });
       }
     }
-  }, [center, zoom, machines, userLocation, map]);
+  }, [center, zoom, machines, userLocation, routePolyline, map]);
 
   return null;
 }
 
-export default function MachineMap({ machines = [], center, zoom = 11, height = '500px', userLocation = null }) {
+export default function MachineMap({
+  machines = [],
+  center,
+  zoom = 11,
+  height = '500px',
+  userLocation = null,
+  showRoute = true,
+}) {
   // Lọc chỉ lấy các máy có đầy đủ tọa độ lat và lng
   const validMachines = machines.filter((m) => m.lat && m.lng);
+
+  // Trạng thái lộ trình đường bộ thực tế (Driving Polyline)
+  const [activeRoute, setActiveRoute] = useState(null);
+  const [loadingRoute, setLoadingRoute] = useState(false);
 
   // Tính tâm bản đồ ưu tiên từ props center, userLocation hoặc máy đầu tiên
   let mapCenter = DEFAULT_CENTER;
@@ -116,8 +115,98 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
     mapCenter = [validMachines[0].lat, validMachines[0].lng];
   }
 
+  // Tự động tìm đường đi thực tế nếu chỉ có 1 máy (vd: trang MachineDetail)
+  useEffect(() => {
+    if (showRoute && userLocation && userLocation.lat && userLocation.lng && validMachines.length === 1) {
+      const target = validMachines[0];
+      setLoadingRoute(true);
+      getRealDrivingRoute([userLocation.lat, userLocation.lng], [target.lat, target.lng])
+        .then((res) => {
+          if (res) setActiveRoute({ ...res, targetName: target.name });
+        })
+        .finally(() => setLoadingRoute(false));
+    }
+  }, [userLocation, validMachines.length, showRoute]);
+
+  // Khi người dùng bấm vào 1 máy trên bản đồ nhiều máy
+  function handleSelectMachineRoute(m) {
+    if (!userLocation || !userLocation.lat || !userLocation.lng || !m.lat || !m.lng) return;
+    setLoadingRoute(true);
+    getRealDrivingRoute([userLocation.lat, userLocation.lng], [m.lat, m.lng])
+      .then((res) => {
+        if (res) setActiveRoute({ ...res, targetName: m.name });
+      })
+      .finally(() => setLoadingRoute(false));
+  }
+
   return (
     <div style={{ height, width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', position: 'relative', zIndex: 1 }}>
+      {/* Banner thông tin lộ trình đường bộ thực tế */}
+      {activeRoute && (
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          left: 12,
+          right: 12,
+          zIndex: 1000,
+          background: 'rgba(21, 58, 46, 0.95)',
+          color: '#fff',
+          padding: '8px 14px',
+          borderRadius: 10,
+          boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 8,
+          backdropFilter: 'blur(6px)',
+          fontSize: 13,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>🛣️</span>
+            <div>
+              <b>Lộ trình đường bộ thực tế tới {activeRoute.targetName || 'máy'}:</b>{' '}
+              <span style={{ color: 'var(--gold)', fontWeight: 'bold' }}>~{activeRoute.distanceKm} km</span>
+              {' · '}
+              <span>⏱️ ~{activeRoute.durationMin} phút di chuyển</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveRoute(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: 12,
+              opacity: 0.8,
+              padding: '2px 6px',
+            }}
+          >
+            ✖ Ẩn đường đi
+          </button>
+        </div>
+      )}
+
+      {loadingRoute && (
+        <div style={{
+          position: 'absolute',
+          bottom: 12,
+          left: 12,
+          zIndex: 1000,
+          background: 'rgba(255,255,255,0.92)',
+          padding: '6px 12px',
+          borderRadius: 8,
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: '#2563EB',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        }}>
+          📡 Đang tính toán đường đi thực tế qua mạng lưới giao thông...
+        </div>
+      )}
+
       <MapContainer
         center={mapCenter}
         zoom={zoom}
@@ -129,7 +218,27 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <MapController center={center} zoom={zoom} machines={validMachines} userLocation={userLocation} />
+        <MapController
+          center={center}
+          zoom={zoom}
+          machines={validMachines}
+          userLocation={userLocation}
+          routePolyline={activeRoute?.polyline}
+        />
+
+        {/* Vẽ Lộ trình đường bộ thực tế (Polyline) */}
+        {activeRoute?.polyline && activeRoute.polyline.length > 0 && (
+          <Polyline
+            positions={activeRoute.polyline}
+            pathOptions={{
+              color: '#2563EB',
+              weight: 5,
+              opacity: 0.85,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+        )}
 
         {/* Vị trí của Nông dân (User GPS Location) */}
         {userLocation && userLocation.lat && userLocation.lng && (
@@ -149,18 +258,18 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
         {/* Danh sách máy nông nghiệp */}
         {validMachines.map((m) => {
           const cat = m.category_id || {};
-          const distKm = userLocation && userLocation.lat && userLocation.lng
-            ? calcDistance(userLocation.lat, userLocation.lng, m.lat, m.lng)
-            : null;
 
           return (
             <Marker
               key={m._id}
               position={[m.lat, m.lng]}
               icon={createCustomIcon(cat.slug)}
+              eventHandlers={{
+                click: () => handleSelectMachineRoute(m),
+              }}
             >
               <Popup>
-                <div style={{ minWidth: 200, padding: 4 }}>
+                <div style={{ minWidth: 210, padding: 4 }}>
                   {m.image_url ? (
                     <img
                       src={resolveImageUrl(m.image_url)}
@@ -176,21 +285,26 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
                   <h4 style={{ margin: '2px 0 4px 0', fontSize: 14.5 }}>{m.name}</h4>
                   <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>📍 {m.district} {m.address_detail ? `· ${m.address_detail}` : ''}</div>
                   
-                  {distKm !== null && (
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      background: distKm <= 10 ? '#E6F4EA' : distKm <= 30 ? '#FEF7E0' : '#F1F3F4',
-                      color: distKm <= 10 ? '#137333' : distKm <= 30 ? '#B06000' : '#3C4043',
-                      padding: '2px 8px',
-                      borderRadius: 6,
-                      fontSize: 11.5,
-                      fontWeight: 'bold',
-                      marginBottom: 8,
-                    }}>
-                      🧭 Ước tính cách bạn: ~{distKm} km
-                    </div>
+                  {userLocation && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectMachineRoute(m)}
+                      style={{
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        border: '1px solid #BFDBFE',
+                        padding: '3px 8px',
+                        borderRadius: 6,
+                        fontSize: 11.5,
+                        fontWeight: 'bold',
+                        width: '100%',
+                        cursor: 'pointer',
+                        marginBottom: 8,
+                        textAlign: 'center',
+                      }}
+                    >
+                      🛣️ Xem đường đi thực tế tới máy
+                    </button>
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed #ddd', paddingTop: 8, marginTop: 4 }}>
@@ -219,3 +333,4 @@ export default function MachineMap({ machines = [], center, zoom = 11, height = 
     </div>
   );
 }
+

@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { categoryIcon, formatVND, formatDate, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
 import VisualAvailabilityCalendar from '../components/VisualAvailabilityCalendar';
-import { calculateDistanceKm, getMachineCoords, DISTRICTS, DISTRICT_CENTERS } from './Search';
+import { getMachineCoords, DISTRICTS, DISTRICT_CENTERS } from './Search';
+import { getRealDrivingRoute } from '../services/routing';
 
 export default function MachineDetail() {
   const { id } = useParams();
@@ -23,6 +24,10 @@ export default function MachineDetail() {
   const [userLocation, setUserLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState('');
+
+  // Lộ trình & khoảng cách đường bộ thực tế (Real road driving routing)
+  const [roadRoute, setRoadRoute] = useState(null);
+  const [loadingRoadRoute, setLoadingRoadRoute] = useState(false);
 
   function handleGetMyLocation() {
     if (!navigator.geolocation) {
@@ -68,6 +73,23 @@ export default function MachineDetail() {
     api.get(`/machines/${id}`).then(setData).catch((e) => setErr(e.message));
   }
   useEffect(load, [id]);
+
+  // Tự động tính toán đường đi thực tế khi có thông tin máy và vị trí nông dân
+  useEffect(() => {
+    if (userLocation && data?.machine) {
+      const mCoords = getMachineCoords(data.machine);
+      if (mCoords) {
+        setLoadingRoadRoute(true);
+        getRealDrivingRoute([userLocation.lat, userLocation.lng], mCoords)
+          .then((res) => {
+            setRoadRoute(res);
+          })
+          .finally(() => setLoadingRoadRoute(false));
+      }
+    } else {
+      setRoadRoute(null);
+    }
+  }, [userLocation, data?.machine]);
 
   function calcDays(start, end) {
     if (!start || !end) return 0;
@@ -236,18 +258,21 @@ export default function MachineDetail() {
                     ✖ Tắt
                   </button>
                 </div>
-                {(() => {
-                  const mCoords = getMachineCoords(machine);
-                  const dKm = mCoords ? calculateDistanceKm(userLocation.lat, userLocation.lng, mCoords[0], mCoords[1]) : null;
-                  return dKm !== null ? (
-                    <div style={{ marginTop: 6, fontSize: 13.5, color: '#14532D' }}>
-                      🧭 Khoảng cách ước tính: <b style={{ fontSize: 16, color: '#15803D' }}>~{dKm} km</b> (đường chim bay theo tọa độ GPS)
-                      <div style={{ fontSize: 12.5, color: '#166534', marginTop: 4 }}>
-                        🚗 Thời gian vận chuyển máy ước tính: <b>~{Math.round(dKm * 2)} - {Math.round(dKm * 2.5)} phút</b>
-                      </div>
+                {loadingRoadRoute ? (
+                  <div style={{ marginTop: 8, fontSize: 13, color: '#2563EB', fontWeight: 'bold' }}>
+                    📡 Đang tính toán đường đi thực tế qua hệ thống giao thông...
+                  </div>
+                ) : roadRoute ? (
+                  <div style={{ marginTop: 6, fontSize: 13.5, color: '#14532D' }}>
+                    🛣️ Khoảng cách đường bộ thực tế: <b style={{ fontSize: 16.5, color: '#15803D' }}>~{roadRoute.distanceKm} km</b>
+                    <span style={{ fontSize: 12, opacity: 0.8, marginLeft: 6 }}>
+                      ({roadRoute.isRealRoad ? 'Theo bản đồ giao thông đường bộ OpenStreetMap' : 'Ước tính theo đường bộ'})
+                    </span>
+                    <div style={{ fontSize: 13, color: '#166534', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>⏱️ Thời gian lái xe / vận chuyển máy dự kiến: <b>~{roadRoute.durationMin} phút</b></span>
                     </div>
-                  ) : null;
-                })()}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
