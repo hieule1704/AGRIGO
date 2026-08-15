@@ -138,6 +138,94 @@ export default function OwnerDashboard() {
     } catch (e) { alert(e.message); }
   }
 
+  // Quản lý chỉnh sửa & Xóa máy
+  const [editingMachine, setEditingMachine] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [editErr, setEditErr] = useState('');
+  const [editOk, setEditOk] = useState('');
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [editImageMode, setEditImageMode] = useState('file');
+  const [uploadingEditImage, setUploadingEditImage] = useState(false);
+
+  function handleStartEdit(m) {
+    setEditingMachine(m);
+    setEditForm({
+      category_id: m.category_id?._id || m.category_id || '',
+      name: m.name || '',
+      description: m.description || '',
+      brand: m.brand || '',
+      year_made: m.year_made || '',
+      price_per_day: m.price_per_day || '',
+      price_max: m.price_max || '',
+      price_unit: m.price_unit || 'ngày',
+      district: m.district || '',
+      address_detail: m.address_detail || '',
+      image_url: m.image_url || '',
+      available_start_date: m.available_start_date || '',
+      available_end_date: m.available_end_date || '',
+      allow_negotiation: !!m.allow_negotiation,
+      discount_long_term: m.discount_long_term ?? 10,
+      min_days_for_discount: m.min_days_for_discount ?? 3,
+      discount_combo: m.discount_combo ?? 5,
+      addons: Array.isArray(m.addons) ? [...m.addons] : [],
+      lat: m.lat || '',
+      lng: m.lng || '',
+    });
+    setEditErr('');
+    setEditOk('');
+  }
+
+  async function handleEditFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingEditImage(true);
+    setEditErr('');
+    try {
+      const res = await api.upload(file);
+      setEditForm((prev) => ({ ...prev, image_url: res.url }));
+      setEditOk('Tải ảnh mới thành công!');
+    } catch (error) {
+      setEditErr('Lỗi tải ảnh: ' + error.message);
+    } finally {
+      setUploadingEditImage(false);
+    }
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    if (!editForm) return;
+    setSubmittingEdit(true);
+    setEditErr('');
+    setEditOk('');
+    try {
+      const res = await api.put(`/machines/${editingMachine._id}`, editForm);
+      setEditOk(res.message || 'Đã lưu chỉnh sửa thành công! Máy đã chuyển sang trạng thái Chờ Admin duyệt lại.');
+      loadMachines();
+      setTimeout(() => {
+        setEditingMachine(null);
+      }, 1600);
+    } catch (err) {
+      setEditErr(err.message || 'Lỗi khi cập nhật máy.');
+    } finally {
+      setSubmittingEdit(false);
+    }
+  }
+
+  async function handleDeleteMachine(m) {
+    const ok = window.confirm(
+      `⚠️ Bạn có chắc chắn muốn XÓA máy "${m.name}"?\n\nLưu ý: Hệ thống chỉ cho phép xóa nếu máy KHÔNG CÓ đơn đặt lịch nào đang hoạt động (đang chờ duyệt hoặc đang được thuê).`
+    );
+    if (!ok) return;
+
+    try {
+      const res = await api.del(`/machines/${m._id}`);
+      alert(res.message || 'Đã xóa máy thành công!');
+      loadMachines();
+    } catch (err) {
+      alert('❌ ' + (err.message || 'Không thể xóa máy.'));
+    }
+  }
+
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [myAds, setMyAds] = useState([]);
@@ -280,30 +368,254 @@ export default function OwnerDashboard() {
 
         {tab === 'machines' && (
           <div className="card-box">
-            <h3>Danh sách máy</h3>
-            <table className="data-table">
-              <thead><tr><th>Hình ảnh</th><th>Tên máy</th><th>Loại</th><th>Khu vực</th><th>Giá/ngày</th><th>Trạng thái</th><th>Đánh giá</th></tr></thead>
-              <tbody>
-                {machines.map((m) => (
-                  <tr key={m._id}>
-                    <td>
-                      {m.image_url ? (
-                        <img src={resolveImageUrl(m.image_url)} alt={m.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/44?text=🚜'; }} />
-                      ) : (
-                        <span style={{ fontSize: 24 }}>🚜</span>
-                      )}
-                    </td>
-                    <td><b>{m.name}</b></td>
-                    <td>{m.category_id?.name}</td>
-                    <td>{m.district}</td>
-                    <td>{formatVND(m.price_per_day)}</td>
-                    <td><StatusPill status={m.status} /></td>
-                    <td>{m.rating_count > 0 ? `★ ${Number(m.rating_avg).toFixed(1)} (${m.rating_count})` : '—'}</td>
+            <div className="flex-between" style={{ marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <h3 style={{ margin: 0 }}>Danh sách máy của bạn</h3>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => switchTab('add')}
+              >
+                + Đăng máy mới
+              </button>
+            </div>
+
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: 10, fontSize: 12.5, color: '#334155', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>ℹ️</span>
+              <div>
+                <b>Quy chuẩn kiểm duyệt an toàn:</b> Mọi thay đổi thông tin máy sau khi lưu sẽ chuyển sang trạng thái <span style={{ color: '#B45309', fontWeight: 'bold' }}>🟡 Chờ Admin duyệt lại</span> trước khi hiển thị ra ngoài. Bạn chỉ có thể <b>Xóa máy</b> khi máy không có đơn đặt lịch nào đang hoạt động.
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Hình ảnh</th>
+                    <th>Tên máy</th>
+                    <th>Loại máy</th>
+                    <th>Khu vực</th>
+                    <th>Giá / ngày</th>
+                    <th>Trạng thái</th>
+                    <th>Đánh giá</th>
+                    <th style={{ textAlign: 'center' }}>Thao tác</th>
                   </tr>
-                ))}
-                {machines.length === 0 && <tr><td colSpan={7} className="small" style={{ padding: 20 }}>Bạn chưa đăng máy nào. Vào tab "Đăng máy mới" để bắt đầu.</td></tr>}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {machines.map((m) => (
+                    <tr key={m._id}>
+                      <td>
+                        {m.image_url ? (
+                          <img src={resolveImageUrl(m.image_url)} alt={m.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/48?text=🚜'; }} />
+                        ) : (
+                          <span style={{ fontSize: 28 }}>🚜</span>
+                        )}
+                      </td>
+                      <td>
+                        <b>{m.name}</b>
+                        {m.brand && <div className="small" style={{ color: 'var(--ink-soft)' }}>Hãng: {m.brand} {m.year_made ? `(Đời ${m.year_made})` : ''}</div>}
+                      </td>
+                      <td>{m.category_id?.name}</td>
+                      <td>{m.district}</td>
+                      <td><b style={{ color: 'var(--green-deep)' }}>{formatVND(m.price_per_day)}</b></td>
+                      <td>
+                        <StatusPill status={m.status} />
+                        {m.status === 'pending' && (
+                          <div style={{ fontSize: 11, color: '#B45309', marginTop: 2 }}>Chờ duyệt</div>
+                        )}
+                      </td>
+                      <td>{m.rating_count > 0 ? `★ ${Number(m.rating_avg).toFixed(1)} (${m.rating_count})` : '—'}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleStartEdit(m)}
+                            style={{ padding: '4px 10px', fontSize: 12, fontWeight: 'bold' }}
+                          >
+                            ✏️ Sửa
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDeleteMachine(m)}
+                            style={{ padding: '4px 10px', fontSize: 12, fontWeight: 'bold' }}
+                          >
+                            🗑️ Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {machines.length === 0 && <tr><td colSpan={8} className="small" style={{ padding: 24, textAlign: 'center' }}>Bạn chưa đăng máy nào. Bấm nút "+ Đăng máy mới" phía trên để bắt đầu.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Chỉnh Sửa Máy Nông Nghiệp */}
+        {editingMachine && editForm && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            backdropFilter: 'blur(4px)',
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              maxWidth: 800,
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 24,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              position: 'relative',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--line)', paddingBottom: 12, marginBottom: 16 }}>
+                <h3 style={{ margin: 0, color: 'var(--green-deep)', fontSize: 18 }}>
+                  ✏️ Chỉnh sửa thông tin máy: {editingMachine.name}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setEditingMachine(null)}
+                  style={{ background: 'transparent', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink-soft)' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ background: '#FFFDF5', border: '1px solid var(--gold)', borderRadius: 8, padding: '8px 14px', fontSize: 12.5, color: '#92400E', marginBottom: 16 }}>
+                ⚠️ <b>Lưu ý an toàn:</b> Sau khi bạn lưu chỉnh sửa, thông tin máy sẽ được chuyển sang trạng thái <b>Chờ Admin duyệt lại</b> để đảm bảo tính xác thực và an toàn cho nông dân trước khi hiển thị công khai.
+              </div>
+
+              {editErr && <div className="alert alert-error">{editErr}</div>}
+              {editOk && <div className="alert alert-success">{editOk}</div>}
+
+              <form onSubmit={handleSaveEdit}>
+                <div className="form-grid">
+                  <div className="field">
+                    <label>Tên máy</label>
+                    <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                  </div>
+
+                  <div className="field">
+                    <label>Loại máy</label>
+                    <select required value={editForm.category_id} onChange={(e) => setEditForm({ ...editForm, category_id: e.target.value })}>
+                      <option value="">-- Chọn loại máy --</option>
+                      {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="field">
+                    <label>Thương hiệu</label>
+                    <input value={editForm.brand} onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })} />
+                  </div>
+
+                  <div className="field">
+                    <label>Đời máy (năm)</label>
+                    <input type="number" value={editForm.year_made} onChange={(e) => setEditForm({ ...editForm, year_made: e.target.value })} />
+                  </div>
+
+                  <div className="field">
+                    <label>Giá thuê / ngày (VNĐ)</label>
+                    <input type="number" required value={editForm.price_per_day} onChange={(e) => setEditForm({ ...editForm, price_per_day: e.target.value })} />
+                  </div>
+
+                  <div className="field">
+                    <label>Giá ước lượng tối đa (VNĐ)</label>
+                    <input type="number" placeholder="Để trống nếu cố định" value={editForm.price_max || ''} onChange={(e) => setEditForm({ ...editForm, price_max: e.target.value })} />
+                  </div>
+
+                  <div className="field full" style={{ background: '#FFFDF5', padding: 10, borderRadius: 8, border: '1px solid var(--gold)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0, fontWeight: 'bold', color: 'var(--green-deep)', fontSize: 13 }}>
+                      <input type="checkbox" checked={editForm.allow_negotiation} onChange={(e) => setEditForm({ ...editForm, allow_negotiation: e.target.checked })} />
+                      <span>💬 Cho phép Nông dân bấm "Thương lượng / Đàm phán giá" trực tiếp</span>
+                    </label>
+                  </div>
+
+                  <div className="field">
+                    <label>Khu vực huyện</label>
+                    <select required value={editForm.district} onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}>
+                      <option value="">-- Chọn khu vực --</option>
+                      {Object.keys(DISTRICT_COORDS).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="field">
+                    <label>Địa chỉ chi tiết</label>
+                    <input value={editForm.address_detail} onChange={(e) => setEditForm({ ...editForm, address_detail: e.target.value })} placeholder="VD: Ấp Vĩnh Phú, Xã Vĩnh Thạnh Trung" />
+                  </div>
+
+                  <div className="field">
+                    <label>Ngày bắt đầu rảnh mùa vụ</label>
+                    <input type="date" value={editForm.available_start_date || ''} onChange={(e) => setEditForm({ ...editForm, available_start_date: e.target.value })} />
+                  </div>
+
+                  <div className="field">
+                    <label>Ngày kết thúc rảnh mùa vụ</label>
+                    <input type="date" value={editForm.available_end_date || ''} onChange={(e) => setEditForm({ ...editForm, available_end_date: e.target.value })} />
+                  </div>
+
+                  {/* Vị trí trên bản đồ */}
+                  <div className="field full">
+                    <label style={{ fontWeight: 'bold' }}>📍 Vị trí đặt máy trên bản đồ (Nhấp vào bản đồ để cập nhật tọa độ)</label>
+                    <LocationPickerMap
+                      position={editForm.lat && editForm.lng ? [Number(editForm.lat), Number(editForm.lng)] : null}
+                      center={editForm.lat && editForm.lng ? [Number(editForm.lat), Number(editForm.lng)] : [10.45, 105.25]}
+                      onSelectLocation={(lat, lng) => setEditForm((prev) => ({ ...prev, lat, lng }))}
+                      height="200px"
+                    />
+                  </div>
+
+                  {/* Hình ảnh máy */}
+                  <div className="field full">
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Hình ảnh máy</span>
+                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                        <span style={{ cursor: 'pointer', fontWeight: editImageMode === 'file' ? 'bold' : 'normal', color: editImageMode === 'file' ? 'var(--green-deep)' : 'inherit' }} onClick={() => setEditImageMode('file')}>Tải ảnh lên</span> | <span style={{ cursor: 'pointer', fontWeight: editImageMode === 'url' ? 'bold' : 'normal', color: editImageMode === 'url' ? 'var(--green-deep)' : 'inherit' }} onClick={() => setEditImageMode('url')}>Nhập URL ảnh</span>
+                      </span>
+                    </label>
+
+                    {editImageMode === 'file' ? (
+                      <div>
+                        <input type="file" accept="image/*" onChange={handleEditFileUpload} disabled={uploadingEditImage} style={{ padding: '6px', fontSize: 13 }} />
+                        {uploadingEditImage && <span className="small" style={{ marginLeft: 8, color: 'var(--teal)' }}>Đang tải ảnh...</span>}
+                      </div>
+                    ) : (
+                      <input type="url" placeholder="https://example.com/image.jpg" value={editForm.image_url} onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })} />
+                    )}
+
+                    {editForm.image_url && (
+                      <div style={{ marginTop: 8 }}>
+                        <img src={resolveImageUrl(editForm.image_url)} alt="Preview" style={{ height: 90, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--line)' }} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="field full">
+                    <label>Mô tả chi tiết</label>
+                    <textarea rows={3} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} placeholder="Thông số kỹ thuật, khả năng làm việc..." />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setEditingMachine(null)}>
+                    Hủy bỏ
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={submittingEdit}>
+                    {submittingEdit ? 'Đang lưu & gửi duyệt...' : '💾 Lưu thay đổi & Gửi Admin duyệt'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

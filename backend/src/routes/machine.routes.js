@@ -121,30 +121,69 @@ router.post('/', requireAuth, requireRole('owner'), async (req, res) => {
 
 // PUT /api/machines/:id  (chu may sua may cua minh)
 router.put('/:id', requireAuth, requireRole('owner'), async (req, res) => {
-  const machine = await Machine.findById(req.params.id);
-  if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
-  if (String(machine.owner_id) !== String(req.user._id)) {
-    return res.status(403).json({ error: 'Bạn không sở hữu máy này.' });
+  try {
+    const machine = await Machine.findById(req.params.id);
+    if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
+    if (String(machine.owner_id) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Bạn không có quyền chỉnh sửa máy này.' });
+    }
+
+    const fields = [
+      'name', 'description', 'brand', 'year_made', 'price_per_day',
+      'price_max', 'price_unit', 'district', 'address_detail', 'lat', 'lng',
+      'image_url', 'category_id', 'available_start_date', 'available_end_date',
+      'allow_negotiation', 'discount_long_term', 'min_days_for_discount',
+      'discount_combo', 'addons'
+    ];
+
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) machine[f] = req.body[f];
+    });
+
+    // Mọi thay đổi thông tin máy từ chủ máy bắt buộc chuyển sang trạng thái pending để chờ Admin phê duyệt lại
+    machine.status = 'pending';
+    await machine.save();
+
+    const updated = await Machine.findById(machine._id).populate('category_id', 'name slug');
+    res.json({
+      machine: updated,
+      message: 'Đã lưu thông tin chỉnh sửa thành công! Máy đã được chuyển sang trạng thái Chờ Admin phê duyệt lại trước khi hiển thị công khai.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi cập nhật máy.', detail: err.message });
   }
-  const fields = ['name', 'description', 'brand', 'year_made', 'price_per_day', 'price_max', 'price_unit', 'district', 'address_detail', 'lat', 'lng', 'image_url', 'category_id', 'available_start_date', 'available_end_date', 'allow_negotiation', 'discount_long_term', 'min_days_for_discount', 'discount_combo', 'addons'];
-  fields.forEach((f) => {
-    if (req.body[f] !== undefined) machine[f] = req.body[f];
-  });
-  // Sua thong tin -> can duyet lai
-  machine.status = 'pending';
-  await machine.save();
-  res.json({ machine });
 });
 
-// DELETE /api/machines/:id
+// DELETE /api/machines/:id (chu may xoa may cua minh)
 router.delete('/:id', requireAuth, requireRole('owner'), async (req, res) => {
-  const machine = await Machine.findById(req.params.id);
-  if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
-  if (String(machine.owner_id) !== String(req.user._id)) {
-    return res.status(403).json({ error: 'Bạn không sở hữu máy này.' });
+  try {
+    const Booking = require('../models/Booking');
+    const machine = await Machine.findById(req.params.id);
+    if (!machine) return res.status(404).json({ error: 'Không tìm thấy máy.' });
+    if (String(machine.owner_id) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Bạn không có quyền xóa máy này.' });
+    }
+
+    // ĐIỀU KIỆN CHUẨN: Kiểm tra máy có đang có đơn đặt lịch đang chờ duyệt hoặc đang thuê không
+    const activeBookingsCount = await Booking.countDocuments({
+      machine_id: machine._id,
+      status: { $in: ['pending', 'accepted'] },
+    });
+
+    if (activeBookingsCount > 0) {
+      return res.status(400).json({
+        error: `Không thể xóa máy này vì đang có ${activeBookingsCount} đơn đặt lịch chưa hoàn tất (đang chờ duyệt hoặc đang được thuê). Vui lòng hoàn tất hoặc hủy các đơn đặt lịch này trước khi xóa máy.`,
+      });
+    }
+
+    // Xóa an toàn các review liên quan và xóa máy
+    await Review.deleteMany({ machine_id: machine._id });
+    await machine.deleteOne();
+
+    res.json({ ok: true, message: 'Đã xóa máy thành công.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi xóa máy.', detail: err.message });
   }
-  await machine.deleteOne();
-  res.json({ ok: true });
 });
 
 // POST /api/machines/:id/block-date  (chu may tu chan 1 ngay ban)
