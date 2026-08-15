@@ -6,9 +6,9 @@ import MachineMap from '../components/MachineMap';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import AdBannerSlider from '../components/AdBannerSlider';
 
-const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
+export const DISTRICTS = ['Long Xuyên', 'Châu Đốc', 'Châu Phú', 'Châu Thành', 'Chợ Mới', 'Phú Tân', 'Tân Châu', 'Thoại Sơn', 'Tri Tôn', 'Tịnh Biên'];
 
-const DISTRICT_CENTERS = {
+export const DISTRICT_CENTERS = {
   'Long Xuyên': [10.3833, 105.4167],
   'Châu Đốc': [10.7000, 105.1167],
   'Châu Phú': [10.5500, 105.1333],
@@ -21,6 +21,30 @@ const DISTRICT_CENTERS = {
   'Châu Thành': [10.4333, 105.3167],
 };
 
+// Hàm tính khoảng cách đường chim bay theo công thức Haversine (km)
+export function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Bán kính Trái Đất (km)
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c;
+  return Math.round(d * 10) / 10; // làm tròn 1 chữ số thập phân
+}
+
+// Lấy tọa độ máy (nếu không có lat/lng riêng thì lấy tâm huyện)
+export function getMachineCoords(m) {
+  if (m.lat && m.lng) return [m.lat, m.lng];
+  if (m.district && DISTRICT_CENTERS[m.district]) return DISTRICT_CENTERS[m.district];
+  return null;
+}
+
 const ITEMS_PER_PAGE = 6;
 
 export default function Search() {
@@ -31,6 +55,11 @@ export default function Search() {
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'split' | 'map'
   const [page, setPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Vị trí thực tế của nông dân để ước lượng khoảng cách
+  const [userLocation, setUserLocation] = useState(null); // { lat: number, lng: number, name: string }
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState('');
 
   const district = params.get('district') || '';
   const category = params.get('category') || '';
@@ -62,23 +91,82 @@ export default function Search() {
     if (district) q.set('district', district);
     if (category) q.set('category', category);
     if (date) q.set('date', date);
-    if (sort) q.set('sort', sort);
+    if (sort && sort !== 'nearest') q.set('sort', sort);
     api.get(`/machines?${q.toString()}`)
       .then((d) => setMachines(d.machines || []))
       .finally(() => setLoading(false));
   }, [district, category, date, sort]);
-
-  const totalPages = Math.ceil(machines.length / ITEMS_PER_PAGE) || 1;
-  const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const paginatedMachines = machines.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-  useScrollReveal([paginatedMachines, viewMode, page]);
 
   function updateParam(key, value) {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value); else next.delete(key);
     setParams(next);
   }
+
+  // Định vị GPS lấy vị trí thực tế của nông dân
+  function handleGetMyLocation() {
+    if (!navigator.geolocation) {
+      setLocError('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+      return;
+    }
+    setLocating(true);
+    setLocError('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          name: 'Vị trí GPS của bạn',
+        });
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === 1) {
+          setLocError('Bạn chưa cấp quyền truy cập vị trí. Bạn có thể chọn nhanh Huyện của mình ở danh sách bên dưới.');
+        } else {
+          setLocError('Không thể lấy tọa độ GPS lúc này. Vui lòng chọn vị trí thủ công.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  // Chọn thủ công huyện nông dân đang ở
+  function handleManualLocation(distName) {
+    if (!distName) {
+      setUserLocation(null);
+      if (sort === 'nearest') updateParam('sort', 'newest');
+      return;
+    }
+    const coords = DISTRICT_CENTERS[distName];
+    if (coords) {
+      setUserLocation({
+        lat: coords[0],
+        lng: coords[1],
+        name: `Huyện ${distName}`,
+      });
+      setLocError('');
+    }
+  }
+
+  // Sắp xếp danh sách máy (Hỗ trợ sắp xếp theo khoảng cách gần nhất)
+  let sortedMachines = [...machines];
+  if (sort === 'nearest' && userLocation) {
+    sortedMachines.sort((a, b) => {
+      const coordsA = getMachineCoords(a);
+      const coordsB = getMachineCoords(b);
+      const distA = coordsA ? calculateDistanceKm(userLocation.lat, userLocation.lng, coordsA[0], coordsA[1]) : 999999;
+      const distB = coordsB ? calculateDistanceKm(userLocation.lat, userLocation.lng, coordsB[0], coordsB[1]) : 999999;
+      return (distA || 999999) - (distB || 999999);
+    });
+  }
+
+  const totalPages = Math.ceil(sortedMachines.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const paginatedMachines = sortedMachines.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useScrollReveal([paginatedMachines, viewMode, page, userLocation]);
 
   const [aiQuery, setAiQuery] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -120,7 +208,7 @@ export default function Search() {
       {/* Bộ lọc tìm kiếm nhanh */}
       <form className="search-card" style={{ marginBottom: 16 }} onSubmit={(e) => e.preventDefault()}>
         <div className="search-field">
-          <label>Khu vực</label>
+          <label>Khu vực máy</label>
           <select value={district} onChange={(e) => updateParam('district', e.target.value)}>
             <option value="">Tất cả khu vực</option>
             {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -139,6 +227,116 @@ export default function Search() {
         </div>
         <button className="btn btn-primary" type="button" onClick={() => { }}>🔍 Tìm kiếm</button>
       </form>
+
+      {/* Thanh Ước lượng khoảng cách từ vị trí thực của Nông dân (Tính năng Google Maps đo khoảng cách) */}
+      <div style={{
+        background: userLocation ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)' : '#FFFFFF',
+        border: `1.5px solid ${userLocation ? '#16A34A' : 'var(--line)'}`,
+        borderRadius: 'var(--radius-md)',
+        padding: '12px 18px',
+        marginBottom: 16,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 12,
+        boxShadow: userLocation ? '0 4px 12px rgba(22,163,74,0.12)' : 'var(--shadow-card)',
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 260 }}>
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            background: userLocation ? '#16A34A' : 'var(--green-soft)',
+            color: userLocation ? '#fff' : 'var(--green-deep)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 20,
+            flexShrink: 0,
+            boxShadow: userLocation ? '0 0 0 4px rgba(22,163,74,0.2)' : 'none',
+          }}>
+            📍
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: '700', color: userLocation ? '#14532D' : 'var(--green-deep)' }}>
+              {userLocation ? (
+                <>🎯 Đang đo khoảng cách từ: <span style={{ color: '#15803D', textDecoration: 'underline' }}>{userLocation.name}</span></>
+              ) : (
+                <>🧭 Ước lượng khoảng cách từ vị trí của bạn tới máy</>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: userLocation ? '#166534' : 'var(--ink-soft)', marginTop: 2 }}>
+              {userLocation
+                ? `Tọa độ GPS [${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}] · Khoảng cách thực tế hiển thị trên từng máy bên dưới.`
+                : `Nhấn "Lấy vị trí GPS" để tính xem mỗi chiếc máy cách ruộng của bạn bao nhiêu km.`}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${userLocation ? 'btn-primary' : 'btn-outline'}`}
+            onClick={handleGetMyLocation}
+            disabled={locating}
+            style={{
+              height: 38,
+              padding: '0 16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontWeight: 'bold',
+              fontSize: 13,
+            }}
+          >
+            {locating ? '📡 Đang dò GPS...' : userLocation ? '🔄 Cập nhật vị trí GPS' : '📍 Lấy vị trí GPS thực tế'}
+          </button>
+
+          {/* Chọn nhanh huyện nông dân đang ở nếu không bật được GPS */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <select
+              value={userLocation && userLocation.name.startsWith('Huyện ') ? userLocation.name.replace('Huyện ', '') : ''}
+              onChange={(e) => handleManualLocation(e.target.value)}
+              style={{
+                height: 38,
+                padding: '0 10px',
+                borderRadius: 8,
+                border: '1px solid var(--line)',
+                fontSize: 12.5,
+                background: '#fff',
+                color: 'var(--ink)',
+                outline: 'none',
+              }}
+            >
+              <option value="">Hoặc chọn Huyện của bạn</option>
+              {DISTRICTS.map((d) => <option key={d} value={d}>Huyện {d}</option>)}
+            </select>
+          </div>
+
+          {userLocation && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setUserLocation(null);
+                if (sort === 'nearest') updateParam('sort', 'newest');
+              }}
+              style={{ height: 38, fontSize: 12.5, color: 'var(--danger)', padding: '0 8px' }}
+              title="Tắt đo khoảng cách"
+            >
+              ✖ Tắt đo
+            </button>
+          )}
+        </div>
+
+        {locError && (
+          <div style={{ width: '100%', fontSize: 12, color: 'var(--danger)', background: '#FEE2E2', padding: '6px 12px', borderRadius: 6, marginTop: 4 }}>
+            ⚠️ {locError}
+          </div>
+        )}
+      </div>
 
       {/* AI Search Assistant */}
       <div className="ai-search-box">
@@ -177,6 +375,17 @@ export default function Search() {
         </button>
         <button
           type="button"
+          className={`sort-chip ${sort === 'nearest' ? 'active' : ''}`}
+          onClick={() => {
+            if (!userLocation) handleGetMyLocation();
+            updateParam('sort', 'nearest');
+          }}
+          style={{ borderColor: userLocation ? 'var(--green-mid)' : 'var(--line)' }}
+        >
+          📍 Gần tôi nhất {userLocation ? '✓' : ''}
+        </button>
+        <button
+          type="button"
           className={`sort-chip ${sort === 'price_asc' ? 'active' : ''}`}
           onClick={() => updateParam('sort', 'price_asc')}
         >
@@ -194,7 +403,8 @@ export default function Search() {
       {/* Thanh điều khiển Chế độ xem: Danh sách / Bản đồ / Song song */}
       <div className="view-control-bar">
         <div className="count-info">
-          Tìm thấy <b>{machines.length}</b> máy nông nghiệp · Trang <b>{page}</b>/<b>{totalPages}</b>
+          Tìm thấy <b>{sortedMachines.length}</b> máy nông nghiệp · Trang <b>{page}</b>/<b>{totalPages}</b>
+          {userLocation && <span style={{ marginLeft: 8, color: 'var(--green-mid)', fontWeight: 'bold' }}>(Đang đo từ vị trí của bạn)</span>}
         </div>
         <div className="view-mode-buttons">
           <button
@@ -242,6 +452,18 @@ export default function Search() {
             <a
               href="#"
               className="opt small"
+              style={{ display: 'block', padding: '6px 0', fontWeight: sort === 'nearest' ? 700 : 400, color: sort === 'nearest' ? 'var(--green-deep)' : 'var(--ink-soft)' }}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!userLocation) handleGetMyLocation();
+                updateParam('sort', 'nearest');
+              }}
+            >
+              📍 Gần tôi nhất {userLocation ? '✓' : ''}
+            </a>
+            <a
+              href="#"
+              className="opt small"
               style={{ display: 'block', padding: '6px 0', fontWeight: sort === 'price_asc' ? 700 : 400, color: sort === 'price_asc' ? 'var(--green-deep)' : 'var(--ink-soft)' }}
               onClick={(e) => { e.preventDefault(); updateParam('sort', 'price_asc'); }}
             >
@@ -255,6 +477,26 @@ export default function Search() {
             >
               ⭐ Đánh giá cao nhất
             </a>
+          </div>
+
+          {/* Hộp thông tin định vị trong sidebar */}
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 10 }}>
+            <h4 style={{ margin: '0 0 8px' }}>Vị trí của bạn</h4>
+            {userLocation ? (
+              <div style={{ fontSize: 12, background: '#E6F4EA', color: '#137333', padding: '8px 10px', borderRadius: 8, lineHeight: 1.4 }}>
+                <b>✅ Đang kích hoạt:</b><br />
+                {userLocation.name}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm btn-block"
+                onClick={handleGetMyLocation}
+                style={{ fontSize: 12, padding: '6px 10px', height: 'auto' }}
+              >
+                📍 Bật GPS đo khoảng cách
+              </button>
+            )}
           </div>
         </aside>
 
@@ -271,7 +513,13 @@ export default function Search() {
               {/* CHẾ ĐỘ XEM 1: CHỈ BẢN ĐỒ */}
               {viewMode === 'map' && (
                 <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--line)' }}>
-                  <MachineMap machines={machines} center={mapCenter} zoom={district ? 12 : 10} height={isMobile ? '450px' : '600px'} />
+                  <MachineMap
+                    machines={sortedMachines}
+                    center={mapCenter}
+                    zoom={district ? 12 : 10}
+                    height={isMobile ? '450px' : '600px'}
+                    userLocation={userLocation}
+                  />
                 </div>
               )}
 
@@ -279,13 +527,19 @@ export default function Search() {
               {viewMode === 'split' && !isMobile && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div style={{ position: 'sticky', top: 80, height: 'calc(100vh - 120px)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                    <MachineMap machines={paginatedMachines} center={mapCenter} zoom={district ? 12 : 10} height="100%" />
+                    <MachineMap
+                      machines={paginatedMachines}
+                      center={mapCenter}
+                      zoom={district ? 12 : 10}
+                      height="100%"
+                      userLocation={userLocation}
+                    />
                   </div>
                   <div className="results-list" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)', paddingRight: 4 }}>
-                    {machines.length === 0 ? (
+                    {sortedMachines.length === 0 ? (
                       <div className="empty-state"><div className="ico">🔍</div>Không tìm thấy máy phù hợp.</div>
                     ) : (
-                      paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} compact={true} />)
+                      paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} compact={true} userLocation={userLocation} />)
                     )}
                   </div>
                 </div>
@@ -294,7 +548,7 @@ export default function Search() {
               {/* CHẾ ĐỘ XEM 3: DANH SÁCH */}
               {(viewMode === 'list' || (viewMode === 'split' && isMobile)) && (
                 <div className="results-list">
-                  {machines.length === 0 ? (
+                  {sortedMachines.length === 0 ? (
                     <div className="empty-state" style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 'var(--radius-md)', padding: 40, textAlign: 'center' }}>
                       <div className="ico" style={{ fontSize: 36, marginBottom: 10 }}>🔍</div>
                       <h4 style={{ margin: '0 0 6px' }}>Không tìm thấy máy phù hợp</h4>
@@ -302,7 +556,7 @@ export default function Search() {
                       <button type="button" className="btn btn-outline btn-sm" onClick={() => setParams(new URLSearchParams())}>Xóa tất cả bộ lọc</button>
                     </div>
                   ) : (
-                    paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} />)
+                    paginatedMachines.map((m) => <MachineRow key={m._id} machine={m} userLocation={userLocation} />)
                   )}
                 </div>
               )}
@@ -383,7 +637,7 @@ export default function Search() {
                   </div>
 
                   <span className="small" style={{ opacity: 0.85, color: 'var(--muted)', fontSize: 12 }}>
-                    Hiển thị <b>{startIndex + 1}</b> - <b>{Math.min(startIndex + ITEMS_PER_PAGE, machines.length)}</b> trong <b>{machines.length}</b> máy nông nghiệp
+                    Hiển thị <b>{startIndex + 1}</b> - <b>{Math.min(startIndex + ITEMS_PER_PAGE, sortedMachines.length)}</b> trong <b>{sortedMachines.length}</b> máy nông nghiệp
                   </span>
                 </div>
               )}
@@ -395,12 +649,18 @@ export default function Search() {
   );
 }
 
-// Component render 1 dòng máy nông nghiệp tối ưu chống vỡ layout trên mọi thiết bị
-function MachineRow({ machine: m, compact = false }) {
+// Component render 1 dòng máy nông nghiệp tối ưu chống vỡ layout trên mọi thiết bị và tích hợp đo khoảng cách
+function MachineRow({ machine: m, compact = false, userLocation = null }) {
   const cat = m.category_id || {};
   const fallbackImg = CATEGORY_PLACEHOLDERS[cat.slug] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&auto=format&fit=crop&q=80';
   const isUnsplashDefault = m.image_url && m.image_url.includes('unsplash.com');
   const imgSrc = (!m.image_url || isUnsplashDefault) ? fallbackImg : resolveImageUrl(m.image_url);
+
+  // Tính khoảng cách tới máy nếu nông dân đã bật định vị vị trí
+  const coords = getMachineCoords(m);
+  const distanceKm = userLocation && coords
+    ? calculateDistanceKm(userLocation.lat, userLocation.lng, coords[0], coords[1])
+    : null;
 
   return (
     <Link to={`/machine/${m._id}`} className={`result-row ${compact ? 'compact' : ''} reveal`}>
@@ -440,19 +700,48 @@ function MachineRow({ machine: m, compact = false }) {
             <span>{cat.name || 'Máy nông nghiệp'}</span>
           </div>
           <h3 title={m.name}>{m.name}</h3>
-          <div className="loc">
-            <span className="loc-icon">📍</span>
-            <span className="loc-text">{m.district}{m.address_detail ? ` · ${m.address_detail}` : ''}</span>
+          
+          <div className="loc" style={{ flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span className="loc-icon">📍</span>
+              <span className="loc-text">{m.district}{m.address_detail ? ` · ${m.address_detail}` : ''}</span>
+            </span>
+
+            {/* Badge Khoảng cách GPS ước lượng */}
+            {distanceKm !== null && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background: distanceKm <= 10 ? '#E6F4EA' : distanceKm <= 30 ? '#FEF7E0' : '#F1F3F4',
+                color: distanceKm <= 10 ? '#137333' : distanceKm <= 30 ? '#B06000' : '#3C4043',
+                border: `1px solid ${distanceKm <= 10 ? '#CEEAD6' : distanceKm <= 30 ? '#FEEFC3' : '#DADCE0'}`,
+                padding: '2px 8px',
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: '700',
+                whiteSpace: 'nowrap',
+              }}>
+                🧭 Cách bạn: ~{distanceKm} km
+              </span>
+            )}
           </div>
+
           {!compact && (
             <div className="desc">
               {(m.description || 'Phương tiện nông nghiệp sẵn sàng phục vụ bà con mùa vụ an toàn, chu đáo.').slice(0, 100)}...
               <span className="desc-more-hint">Xem chi tiết →</span>
             </div>
           )}
+          
           <div className="tag-row">
             {m.brand && <span className="tag">{m.brand}</span>}
             {m.year_made && <span className="tag">Đời {m.year_made}</span>}
+            {distanceKm !== null && (
+              <span className="tag" style={{ background: '#E0F2FE', color: '#0369A1' }}>
+                🚗 ~{Math.round(distanceKm * 2)} phút di chuyển
+              </span>
+            )}
           </div>
         </div>
       </div>

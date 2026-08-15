@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { categoryIcon, formatVND, formatDate, CATEGORY_PLACEHOLDERS } from '../components/MachineCard';
 import MachineMap from '../components/MachineMap';
 import VisualAvailabilityCalendar from '../components/VisualAvailabilityCalendar';
+import { calculateDistanceKm, getMachineCoords, DISTRICTS, DISTRICT_CENTERS } from './Search';
 
 export default function MachineDetail() {
   const { id } = useParams();
@@ -17,6 +18,51 @@ export default function MachineDetail() {
   const [paymentMethod, setPaymentMethod] = useState('qr'); // 'qr' | 'ewallet' | 'cash'
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [submittingBooking, setSubmittingBooking] = useState(false);
+
+  // Vị trí thực tế của nông dân để ước lượng khoảng cách
+  const [userLocation, setUserLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState('');
+
+  function handleGetMyLocation() {
+    if (!navigator.geolocation) {
+      setLocError('Trình duyệt không hỗ trợ GPS.');
+      return;
+    }
+    setLocating(true);
+    setLocError('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          name: 'Vị trí GPS của bạn',
+        });
+        setLocating(false);
+      },
+      (e) => {
+        setLocating(false);
+        setLocError('Không thể lấy tọa độ GPS lúc này. Bạn có thể chọn Huyện của mình bên dưới.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  function handleManualLocation(distName) {
+    if (!distName) {
+      setUserLocation(null);
+      return;
+    }
+    const coords = DISTRICT_CENTERS[distName];
+    if (coords) {
+      setUserLocation({
+        lat: coords[0],
+        lng: coords[1],
+        name: `Huyện ${distName}`,
+      });
+      setLocError('');
+    }
+  }
 
   function load() {
     api.get(`/machines/${id}`).then(setData).catch((e) => setErr(e.message));
@@ -147,13 +193,102 @@ export default function MachineDetail() {
             </div>
           </div>
 
-          {machine.lat && machine.lng && (
-            <div className="card-box" style={{ marginTop: 20 }}>
-              <h3>🗺 Vị trí máy trên bản đồ</h3>
-              <p className="small" style={{ marginBottom: 12 }}>📍 {machine.district} {machine.address_detail ? `(${machine.address_detail})` : ''} · Tọa độ: {machine.lat}, {machine.lng}</p>
-              <MachineMap machines={[machine]} center={[machine.lat, machine.lng]} zoom={13} height="280px" />
+          {/* Hộp Bản đồ & Ước lượng khoảng cách từ vị trí thực của nông dân */}
+          <div className="card-box" style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>🗺 Vị trí & Ước lượng khoảng cách</h3>
+              <button
+                type="button"
+                className={`btn btn-sm ${userLocation ? 'btn-primary' : 'btn-outline'}`}
+                onClick={handleGetMyLocation}
+                disabled={locating}
+                style={{ fontSize: 12.5, padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {locating ? '📡 Đang dò GPS...' : userLocation ? '🔄 Cập nhật GPS' : '📍 Đo khoảng cách từ vị trí của bạn'}
+              </button>
             </div>
-          )}
+
+            <p className="small" style={{ marginBottom: 10 }}>
+              📍 <b>Vị trí đặt máy:</b> {machine.district} {machine.address_detail ? `(${machine.address_detail})` : ''}
+              {machine.lat && machine.lng && <span style={{ opacity: 0.7 }}> · Tọa độ: [{machine.lat}, {machine.lng}]</span>}
+            </p>
+
+            {/* Thông tin khoảng cách ước lượng */}
+            {userLocation ? (
+              <div style={{
+                background: '#F0FDF4',
+                border: '1.5px solid #16A34A',
+                borderRadius: 10,
+                padding: '12px 16px',
+                marginBottom: 14,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#15803D', fontWeight: 'bold', fontSize: 13.5 }}>
+                    <span>🎯</span>
+                    <span>Vị trí của bạn: {userLocation.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setUserLocation(null)}
+                    style={{ fontSize: 11.5, color: 'var(--danger)', padding: '0 4px', height: 'auto' }}
+                  >
+                    ✖ Tắt
+                  </button>
+                </div>
+                {(() => {
+                  const mCoords = getMachineCoords(machine);
+                  const dKm = mCoords ? calculateDistanceKm(userLocation.lat, userLocation.lng, mCoords[0], mCoords[1]) : null;
+                  return dKm !== null ? (
+                    <div style={{ marginTop: 6, fontSize: 13.5, color: '#14532D' }}>
+                      🧭 Khoảng cách ước tính: <b style={{ fontSize: 16, color: '#15803D' }}>~{dKm} km</b> (đường chim bay theo tọa độ GPS)
+                      <div style={{ fontSize: 12.5, color: '#166534', marginTop: 4 }}>
+                        🚗 Thời gian vận chuyển máy ước tính: <b>~{Math.round(dKm * 2)} - {Math.round(dKm * 2.5)} phút</b>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                <span className="small" style={{ color: 'var(--ink-soft)' }}>Hoặc chọn nhanh Huyện của bạn:</span>
+                <select
+                  value=""
+                  onChange={(e) => handleManualLocation(e.target.value)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    border: '1px solid var(--line)',
+                    fontSize: 12,
+                    background: '#fff',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="">-- Chọn Huyện để tính km --</option>
+                  {DISTRICTS.map((d) => <option key={d} value={d}>Huyện {d}</option>)}
+                </select>
+              </div>
+            )}
+
+            {locError && (
+              <div style={{ fontSize: 12, color: 'var(--danger)', background: '#FEE2E2', padding: '6px 12px', borderRadius: 6, marginBottom: 10 }}>
+                ⚠️ {locError}
+              </div>
+            )}
+
+            {(() => {
+              const mCoords = getMachineCoords(machine);
+              return mCoords ? (
+                <MachineMap
+                  machines={[machine]}
+                  center={mCoords}
+                  zoom={13}
+                  height="280px"
+                  userLocation={userLocation}
+                />
+              ) : null;
+            })()}
+          </div>
 
           {/* 
             📸 [HƯỚNG DẪN CHỌN ẢNH AVATAR CHỦ MÁY / USER]:
