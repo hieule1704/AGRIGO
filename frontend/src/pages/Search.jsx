@@ -169,6 +169,8 @@ export default function Search() {
   const [aiQuery, setAiQuery] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiNote, setAiNote] = useState('');
+  const [showAiDrawer, setShowAiDrawer] = useState(false);
+  const [showLocDrawer, setShowLocDrawer] = useState(false);
 
   async function handleAiSearch(e) {
     e.preventDefault();
@@ -203,161 +205,205 @@ export default function Search() {
       {/* Sponsored Banner Quảng cáo Đối tác VIP */}
       <AdBannerSlider district={district} />
 
-      {/* Bộ lọc tìm kiếm nhanh */}
-      <form className="search-card" style={{ marginBottom: 16 }} onSubmit={(e) => e.preventDefault()}>
-        <div className="search-field">
-          <label>Khu vực máy</label>
-          <select value={district} onChange={(e) => updateParam('district', e.target.value)}>
-            <option value="">Tất cả khu vực</option>
-            {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        <div className="search-field">
-          <label>Loại máy</label>
-          <select value={category} onChange={(e) => updateParam('category', e.target.value)}>
-            <option value="">Tất cả loại máy</option>
-            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div className="search-field">
-          <label>Ngày cần dùng</label>
-          <input type="date" value={date} onChange={(e) => updateParam('date', e.target.value)} />
-        </div>
-        <button className="btn btn-primary" type="button" onClick={() => { }}>🔍 Tìm kiếm</button>
-      </form>
-
-      {/* Thanh Ước lượng khoảng cách đường bộ thực tế (Công nghệ bản đồ số Google Maps/OpenStreetMap) */}
-      <div style={{
-        background: userLocation ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)' : '#FFFFFF',
-        border: `1.5px solid ${userLocation ? '#16A34A' : 'var(--line)'}`,
-        borderRadius: 'var(--radius-md)',
-        padding: '12px 18px',
-        marginBottom: 16,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 12,
-        boxShadow: userLocation ? '0 4px 12px rgba(22,163,74,0.12)' : 'var(--shadow-card)',
-        transition: 'all 0.3s ease',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 260 }}>
-          <div style={{
-            width: 42,
-            height: 42,
-            borderRadius: '50%',
-            background: userLocation ? '#16A34A' : 'var(--green-soft)',
-            color: userLocation ? '#fff' : 'var(--green-deep)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 20,
-            flexShrink: 0,
-            boxShadow: userLocation ? '0 0 0 4px rgba(22,163,74,0.2)' : 'none',
-          }}>
-            📍
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: '700', color: userLocation ? '#14532D' : 'var(--green-deep)' }}>
-              {userLocation ? (
-                <>🎯 Đang đo đường bộ thực tế từ: <span style={{ color: '#15803D', textDecoration: 'underline' }}>{userLocation.name}</span></>
-              ) : (
-                <>🛣️ Ước lượng khoảng cách & đường đi thực tế từ vị trí của bạn tới máy</>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: userLocation ? '#166534' : 'var(--ink-soft)', marginTop: 2 }}>
-              {userLocation
-                ? `Tọa độ GPS [${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}] · Đang tính quãng đường xe chạy qua cầu, quốc lộ và tỉnh lộ thực tế.`
-                : `Nhấn "Lấy vị trí GPS" để tính xem xe máy/xe tải chở máy cần chạy bao nhiêu km đường bộ để tới ruộng của bạn.`}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className={`btn btn-sm ${userLocation ? 'btn-primary' : 'btn-outline'}`}
-            onClick={handleGetMyLocation}
-            disabled={locating}
-            style={{
-              height: 38,
-              padding: '0 16px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              fontWeight: 'bold',
-              fontSize: 13,
-            }}
-          >
-            {locating ? '📡 Đang dò GPS...' : userLocation ? '🔄 Cập nhật vị trí GPS' : '📍 Lấy vị trí GPS thực tế'}
-          </button>
-
-          {/* Chọn nhanh huyện nông dân đang ở nếu không bật được GPS */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      {/* Master Search Bar (Capsule Tinh Gọn Hiện Đại) */}
+      <div className="search-master-wrapper">
+        <form className="search-master-bar" onSubmit={(e) => e.preventDefault()}>
+          <div className="search-col">
+            <label className="search-col-label">📍 Khu vực máy</label>
             <select
-              value={userLocation && userLocation.name.startsWith('Huyện ') ? userLocation.name.replace('Huyện ', '') : ''}
-              onChange={(e) => handleManualLocation(e.target.value)}
-              style={{
-                height: 38,
-                padding: '0 10px',
-                borderRadius: 8,
-                border: '1px solid var(--line)',
-                fontSize: 12.5,
-                background: '#fff',
-                color: 'var(--ink)',
-                outline: 'none',
-              }}
+              value={district}
+              onChange={(e) => updateParam('district', e.target.value)}
+              className="search-col-select"
             >
-              <option value="">Hoặc chọn Huyện của bạn</option>
-              {DISTRICTS.map((d) => <option key={d} value={d}>Huyện {d}</option>)}
+              <option value="">Tất cả khu vực (An Giang)</option>
+              {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
+          <div className="search-divider" />
+
+          <div className="search-col">
+            <label className="search-col-label">🚜 Loại máy cơ giới</label>
+            <select
+              value={category}
+              onChange={(e) => updateParam('category', e.target.value)}
+              className="search-col-select"
+            >
+              <option value="">Tất cả loại máy</option>
+              {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div className="search-divider" />
+
+          <div className="search-col">
+            <label className="search-col-label">📅 Ngày cần dùng</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => updateParam('date', e.target.value)}
+              className="search-col-input"
+            />
+          </div>
+
+          <button className="btn btn-primary search-submit-btn" type="button">
+            🔍 Tìm kiếm
+          </button>
+        </form>
+
+        {/* Thanh Action Toolbar Pills (Mở rộng tính năng 1 chạm - Trợ lý AI, Đo đường bộ) */}
+        <div className="search-action-pills">
+          <button
+            type="button"
+            className={`action-pill ${showAiDrawer ? 'active' : ''}`}
+            onClick={() => {
+              setShowAiDrawer(!showAiDrawer);
+              setShowLocDrawer(false);
+            }}
+          >
+            ✨ Trợ lý AI Tìm máy {showAiDrawer ? '▲' : '▾'}
+          </button>
+
+          <button
+            type="button"
+            className={`action-pill ${userLocation || showLocDrawer ? 'active' : ''}`}
+            onClick={() => {
+              setShowLocDrawer(!showLocDrawer);
+              setShowAiDrawer(false);
+            }}
+          >
+            🛣️ {userLocation ? `Đang đo từ: ${userLocation.name}` : 'Đo đường bộ tới ruộng'} {showLocDrawer ? '▲' : '▾'}
+          </button>
+
           {userLocation && (
+            <span className="user-loc-badge">
+              <span>🎯 {userLocation.name}</span>
+              <button
+                type="button"
+                className="btn-loc-clear"
+                onClick={() => {
+                  setUserLocation(null);
+                  if (sort === 'nearest') updateParam('sort', 'newest');
+                }}
+                title="Tắt đo đường bộ"
+              >
+                ✕
+              </button>
+            </span>
+          )}
+
+          {(district || category || date) && (
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="action-pill-reset"
               onClick={() => {
-                setUserLocation(null);
-                if (sort === 'nearest') updateParam('sort', 'newest');
+                const next = new URLSearchParams();
+                if (sort) next.set('sort', sort);
+                setParams(next);
               }}
-              style={{ height: 38, fontSize: 12.5, color: 'var(--danger)', padding: '0 8px' }}
-              title="Tắt đo khoảng cách"
             >
-              ✖ Tắt đo
+              🔄 Xóa bộ lọc
             </button>
           )}
         </div>
 
-        {locError && (
-          <div style={{ width: '100%', fontSize: 12, color: 'var(--danger)', background: '#FEE2E2', padding: '6px 12px', borderRadius: 6, marginTop: 4 }}>
-            ⚠️ {locError}
+        {/* Collapsible Drawer 1: Trợ lý AI Tìm kiếm Thông minh */}
+        {showAiDrawer && (
+          <div className="ai-drawer-expand reveal-fast">
+            <form onSubmit={handleAiSearch} className="ai-drawer-form">
+              <div className="ai-drawer-input-wrapper">
+                <span className="ai-drawer-icon">🤖</span>
+                <input
+                  type="text"
+                  placeholder="Mô tả bằng tiếng Việt: Cần thuê máy gặt ở Thoại Sơn gấp ngày mai, giá rẻ..."
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  className="ai-drawer-input"
+                  autoFocus
+                />
+                <button type="submit" className="btn btn-primary btn-sm ai-drawer-submit" disabled={aiLoading}>
+                  {aiLoading ? 'Đang phân tích...' : '✨ Tìm ngay'}
+                </button>
+              </div>
+
+              <div className="ai-suggestion-chips">
+                <span className="ai-suggestion-label">💡 Gợi ý nhanh:</span>
+                {['🌾 Máy gặt đập Thoại Sơn', '🚁 Drone phun thuốc rầy nâu', '🚜 Máy cày xới đất Châu Phú', '🌱 Máy cấy mạ khay Chợ Mới'].map((sug) => (
+                  <button
+                    key={sug}
+                    type="button"
+                    className="ai-chip-tag"
+                    onClick={() => {
+                      setAiQuery(sug.slice(2));
+                    }}
+                  >
+                    {sug}
+                  </button>
+                ))}
+              </div>
+            </form>
+            {aiNote && (
+              <div className="ai-drawer-note">
+                💡 {aiNote}
+              </div>
+            )}
           </div>
         )}
-      </div>
 
-      {/* AI Search Assistant */}
-      <div className="ai-search-box">
-        <form onSubmit={handleAiSearch} className="ai-search-form">
-          <div className="ai-search-input-group">
-            <label>
-              🤖 Trợ lý AI Tìm máy nông nghiệp (Ngôn ngữ tự nhiên)
-            </label>
-            <input
-              type="text"
-              placeholder="VD: Cần thuê máy gặt ở Thoại Sơn gấp ngày mai..."
-              value={aiQuery}
-              onChange={(e) => setAiQuery(e.target.value)}
-              className="ai-search-input"
-            />
-          </div>
-          <button type="submit" className="btn btn-primary ai-search-btn" disabled={aiLoading}>
-            {aiLoading ? 'Đang phân tích...' : '✨ Tìm bằng AI'}
-          </button>
-        </form>
-        {aiNote && (
-          <div className="ai-note-box">
-            💡 {aiNote}
+        {/* Collapsible Drawer 2: Công cụ Đo Khoảng cách & Lộ trình Đường bộ Thực tế */}
+        {showLocDrawer && (
+          <div className="loc-drawer-expand reveal-fast">
+            <div className="loc-drawer-content">
+              <div className="loc-drawer-info">
+                <span style={{ fontSize: 20 }}>📍</span>
+                <div>
+                  <b style={{ fontSize: 13, color: '#15803D' }}>Đo khoảng cách đường bộ thực tế qua mạng lưới giao thông:</b>
+                  <div style={{ fontSize: 12, color: '#166534', marginTop: 2 }}>
+                    Tự động tính quãng đường xe chạy qua cầu, quốc lộ và thời gian lái xe để đưa máy đến ruộng của bạn.
+                  </div>
+                </div>
+              </div>
+
+              <div className="loc-drawer-actions">
+                <button
+                  type="button"
+                  className={`btn btn-sm ${userLocation ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={handleGetMyLocation}
+                  disabled={locating}
+                  style={{ height: 34, fontSize: 12.5, fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  {locating ? '📡 Đang dò GPS...' : userLocation ? '🔄 Cập nhật vị trí GPS' : '📍 Lấy vị trí GPS của bạn'}
+                </button>
+
+                <select
+                  value={userLocation && userLocation.name.startsWith('Huyện ') ? userLocation.name.replace('Huyện ', '') : ''}
+                  onChange={(e) => handleManualLocation(e.target.value)}
+                  className="loc-drawer-select"
+                >
+                  <option value="">Hoặc chọn Huyện của bạn</option>
+                  {DISTRICTS.map((d) => <option key={d} value={d}>Huyện {d}</option>)}
+                </select>
+
+                {userLocation && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      setUserLocation(null);
+                      if (sort === 'nearest') updateParam('sort', 'newest');
+                    }}
+                    style={{ color: 'var(--danger)', height: 34, fontSize: 12 }}
+                  >
+                    ✖ Tắt đo
+                  </button>
+                )}
+              </div>
+            </div>
+            {locError && (
+              <div className="loc-drawer-error">
+                ⚠️ {locError}
+              </div>
+            )}
           </div>
         )}
       </div>
