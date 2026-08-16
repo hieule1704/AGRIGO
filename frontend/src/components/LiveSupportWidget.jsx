@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const PRESET_FAQS = [
@@ -19,13 +19,20 @@ const PRESET_FAQS = [
 export default function LiveSupportWidget() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: '👋 Xin chào! Tôi là Trợ lý CSKH AGRIGO An Giang (Bản thử nghiệm Beta). Rất vui được hỗ trợ bạn hôm nay!',
+      text: '👋 Xin chào bà con & quý khách! Tôi là Trợ lý CSKH AGRIGO An Giang (Bản thử nghiệm Beta). Bạn cần hỗ trợ gì hôm nay?',
     },
   ]);
   const [input, setInput] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, open]);
 
   function handleSend(e) {
     e?.preventDefault();
@@ -41,7 +48,7 @@ export default function LiveSupportWidget() {
         ...prev,
         {
           sender: 'bot',
-          text: `ℹ️ [Chế độ Demo Beta] Cảm ơn bạn đã gửi câu hỏi: "${userText}". Đội ngũ kỹ thuật viên AGRIGO khu vực An Giang đã tiếp nhận và sẽ phản hồi sớm nhất qua Hotline. Trân trọng!`,
+          text: `ℹ️ [Chế độ Demo Beta] Cảm ơn bạn đã gửi câu hỏi: "${userText}". Đội ngũ kỹ thuật viên AGRIGO khu vực An Giang đã tiếp nhận và sẽ phản hồi sớm nhất qua Hotline 1900 6868. Trân trọng!`,
         },
       ]);
     }, 600);
@@ -63,103 +70,54 @@ export default function LiveSupportWidget() {
   return (
     <>
       {/* Floating Trigger Button at Bottom-Right */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 9999,
-        }}
-      >
+      <div className="chat-trigger-wrapper">
         {!open && (
           <button
             type="button"
+            className="chat-trigger-btn"
             onClick={() => setOpen(true)}
-            style={{
-              background: 'linear-gradient(135deg, var(--green-deep), var(--green-mid))',
-              color: '#fff',
-              border: '2px solid var(--gold)',
-              borderRadius: '999px',
-              padding: '12px 20px',
-              fontWeight: '800',
-              fontSize: 14,
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(21, 58, 46, 0.35)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              transition: 'transform 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            aria-label="Mở cửa sổ hỗ trợ trực tuyến"
           >
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#4CAF50', display: 'inline-block', boxShadow: '0 0 8px #4CAF50' }}></span>
-            💬 Hỗ trợ 24/7
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 8px #22C55E' }}></span>
+            <span>💬 Hỗ trợ 24/7</span>
           </button>
         )}
       </div>
 
       {/* Floating Chat Modal / Drawer */}
       {open && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            width: 360,
-            maxWidth: '90vw',
-            height: 480,
-            background: '#ffffff',
-            borderRadius: 18,
-            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.25)',
-            border: '2px solid var(--gold)',
-            zIndex: 10000,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            animation: 'slideUp 0.25s ease-out',
-          }}
-        >
+        <div className="chat-widget-window">
           {/* Header */}
-          <div
-            style={{
-              background: 'linear-gradient(135deg, var(--green-deep), var(--green-mid))',
-              color: '#fff',
-              padding: '14px 18px',
-              display: 'flex',
-              justify: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <div>
-              <div style={{ fontWeight: '800', fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4CAF50' }}></span>
-                💬 Trung Tâm Hỗ Trợ AGRIGO
+          <div className="chat-widget-header">
+            <div className="chat-header-info">
+              <div className="chat-header-title">
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px #22C55E' }}></span>
+                💬 Hỗ Trợ AGRIGO An Giang
               </div>
-              <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>Trực tuyến 24/7 · Chế độ Demo Beta</div>
+              <div className="chat-header-status">
+                <span>● Trực tuyến 24/7</span> · <span>Bản Demo Beta</span>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: 18,
-                cursor: 'pointer',
-                opacity: 0.8,
-              }}
-            >
-              ✖
-            </button>
+
+            <div className="chat-header-actions">
+              {/* Nút Đóng (✕) Siêu Tương Phản - Nền Trắng Sáng / Viền Rõ / Hover Đỏ Rõ Ràng */}
+              <button
+                type="button"
+                className="chat-action-close-btn"
+                onClick={() => setOpen(false)}
+                title="Đóng cửa sổ hỗ trợ"
+                aria-label="Đóng cửa sổ hỗ trợ"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}
           <div
             style={{
               flex: 1,
-              padding: 14,
+              padding: '14px 14px 8px',
               overflowY: 'auto',
               background: '#FBF8F1',
               display: 'flex',
@@ -172,15 +130,16 @@ export default function LiveSupportWidget() {
                 key={idx}
                 style={{
                   alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '85%',
+                  maxWidth: '86%',
                   background: m.sender === 'user' ? 'var(--green-mid)' : '#ffffff',
                   color: m.sender === 'user' ? '#ffffff' : 'var(--ink)',
                   padding: '10px 14px',
                   borderRadius: m.sender === 'user' ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
                   fontSize: 13,
-                  lineHeight: 1.5,
+                  lineHeight: 1.55,
                   boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
                   border: m.sender === 'user' ? 'none' : '1px solid var(--line)',
+                  wordBreak: 'break-word',
                 }}
               >
                 {m.text}
@@ -188,7 +147,7 @@ export default function LiveSupportWidget() {
             ))}
 
             {/* Quick FAQs Suggestions */}
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 8, paddingBottom: 6 }}>
               <div style={{ fontSize: 11, fontWeight: '700', color: 'var(--ink-soft)', marginBottom: 6 }}>
                 💡 Câu hỏi phổ biến:
               </div>
@@ -208,25 +167,30 @@ export default function LiveSupportWidget() {
                       color: 'var(--green-deep)',
                       fontWeight: '600',
                       cursor: 'pointer',
-                      transition: 'background 0.15s',
+                      transition: 'background 0.15s, border-color 0.15s',
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.background = '#FFFDF5'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.background = '#ffffff'; }}
                   >
                     {f.q}
                   </button>
                 ))}
               </div>
             </div>
+
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Form */}
           <form
             onSubmit={handleSend}
             style={{
-              padding: 10,
+              padding: '10px 12px',
               background: '#ffffff',
               borderTop: '1px solid var(--line)',
               display: 'flex',
               gap: 8,
+              alignItems: 'center',
             }}
           >
             <input
@@ -236,17 +200,20 @@ export default function LiveSupportWidget() {
               onChange={(e) => setInput(e.target.value)}
               style={{
                 flex: 1,
-                padding: '8px 12px',
+                padding: '9px 14px',
                 borderRadius: 999,
-                border: '1px solid var(--line)',
+                border: '1.5px solid var(--line)',
                 fontSize: 13,
                 outline: 'none',
+                background: '#F8FAFC',
               }}
+              onFocus={(e) => (e.target.style.borderColor = 'var(--green-mid)')}
+              onBlur={(e) => (e.target.style.borderColor = 'var(--line)')}
             />
             <button
               type="submit"
               className="btn btn-primary btn-sm"
-              style={{ padding: '8px 14px', borderRadius: 999 }}
+              style={{ padding: '8px 16px', borderRadius: 999, fontWeight: 'bold' }}
             >
               Gửi
             </button>
