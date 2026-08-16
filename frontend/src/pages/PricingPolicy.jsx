@@ -16,10 +16,10 @@ export default function PricingPolicy() {
           <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 0 14px' }}>
             💵 MINH BẠCH CHI PHÍ — KHÔNG PHÍ ẨN
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25, textAlign: 'center' }}>
+          <h1 className="responsive-hero-h1" style={{ textAlign: 'center' }}>
             Bảng Giá Dịch Vụ & Chính Sách Nền Tảng AGRIGO
           </h1>
-          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0, textAlign: 'center' }}>
+          <p className="lead responsive-hero-lead" style={{ textAlign: 'center' }}>
             Mô hình chi phí minh bạch, giúp nông dân dễ dàng tiếp cận máy nông nghiệp và giúp chủ máy tối ưu lợi nhuận từ dàn xe cơ giới tại An Giang.
           </p>
         </div>
@@ -33,9 +33,9 @@ export default function PricingPolicy() {
             <h2>Lựa chọn gói linh hoạt cho Nông Dân & Chủ Máy</h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'stretch' }}>
+          <div className="pricing-cards-grid">
             {/* Gói Nông Dân */}
-            <div className="card-box" style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid var(--line)' }}>
+            <div className="card-box pricing-card">
               <div>
                 <span className="badge" style={{ background: 'var(--green-soft)', color: 'var(--green-deep)', marginBottom: 12 }}>🌾 DÀNH CHO NÔNG DÂN</span>
                 <h3 style={{ fontSize: 22, margin: '8px 0 4px' }}>Nông Dân Thuê Máy</h3>
@@ -58,7 +58,7 @@ export default function PricingPolicy() {
             </div>
 
             {/* Gói Chủ Máy Cơ Bản */}
-            <div className="card-box" style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid var(--line)' }}>
+            <div className="card-box pricing-card">
               <div>
                 <span className="badge" style={{ background: '#EAEAEA', color: '#333', marginBottom: 12 }}>🚜 DÀNH CHO CHỦ MÁY</span>
                 <h3 style={{ fontSize: 22, margin: '8px 0 4px' }}>Chủ Máy Cơ Bản</h3>
@@ -81,7 +81,7 @@ export default function PricingPolicy() {
             </div>
 
             {/* Gói VIP Partner Premium */}
-            <div className="card-box" style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '2px solid var(--gold)', background: '#FFFDF5', boxShadow: '0 8px 24px rgba(232, 172, 31, 0.2)' }}>
+            <div className="card-box pricing-card vip">
               <div>
                 <span className="badge badge-gold" style={{ marginBottom: 12 }}>👑 VIP PARTNER ĐỘC QUYỀN</span>
                 <h3 style={{ fontSize: 22, margin: '8px 0 4px' }}>Chủ Máy VIP Partner</h3>
@@ -105,9 +105,9 @@ export default function PricingPolicy() {
           </div>
 
           {/* Policy Overview Grid */}
-          <div className="card-box" style={{ marginTop: 44, padding: 36, borderRadius: 20 }}>
+          <div className="card-box" style={{ marginTop: 44, padding: 32, borderRadius: 20 }}>
             <h3 style={{ fontSize: 22, marginBottom: 20, textAlign: 'center' }}>🛡️ Chính Sách Hủy Đơn & Đảm Bảo Quyền Lợi</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30 }}>
+            <div className="pricing-policy-grid">
               <div style={{ background: 'var(--bg-light)', padding: 22, borderRadius: 14, border: '1px solid #cfe3d1' }}>
                 <h4 style={{ margin: '0 0 10px', color: 'var(--green-deep)', fontSize: 16 }}>🌾 Dành cho Nông dân thuê máy:</h4>
                 <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'var(--ink)' }}>

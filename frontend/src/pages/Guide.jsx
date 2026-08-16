@@ -19,10 +19,10 @@ export default function Guide() {
           <div className="eyebrow" style={{ color: 'var(--gold)', background: 'rgba(232,172,31,0.15)', border: '1px solid var(--gold)', margin: '0 0 14px' }}>
             📖 CẨM NANG VẬN HÀNH DỄ DÀNG
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 14px', lineHeight: 1.25, textAlign: 'center' }}>
+          <h1 className="responsive-hero-h1" style={{ textAlign: 'center' }}>
             Hướng Dẫn Sử Dụng Nền Tảng AGRIGO
           </h1>
-          <p className="lead" style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6, margin: 0, textAlign: 'center' }}>
+          <p className="lead responsive-hero-lead" style={{ textAlign: 'center' }}>
             Quy trình từng bước đơn giản giúp Nông dân dễ dàng thuê máy sạ gặt và giúp Chủ máy quản lý vận hành phương tiện nông nghiệp hiệu quả.
           </p>
         </div>
@@ -32,7 +32,7 @@ export default function Guide() {
       <section className="section" style={{ padding: '60px 0' }}>
         <div className="container">
           {/* Role Switcher Toggle */}
-          <div className="role-toggle" style={{ maxWidth: 440, margin: '0 auto 40px', padding: 6, background: 'var(--green-soft)', borderRadius: 999 }}>
+          <div className="role-toggle" style={{ maxWidth: 440, margin: '0 auto 36px', padding: 6, background: 'var(--green-soft)', borderRadius: 999 }}>
             <a
               href="#"
               className={tab === 'farmer' ? 'active' : ''}
@@ -54,8 +54,8 @@ export default function Guide() {
           {/* TAB 1: NÔNG DÂN THUÊ MÁY */}
           {tab === 'farmer' && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+              <div className="guide-steps-grid">
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold)', opacity: 0.9, display: 'block', marginBottom: 10 }}>01</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>1. Tìm kiếm máy theo địa bàn</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -63,7 +63,7 @@ export default function Guide() {
                   </p>
                 </div>
 
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold)', opacity: 0.9, display: 'block', marginBottom: 10 }}>02</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>2. Chọn máy & Thanh toán</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -71,7 +71,7 @@ export default function Guide() {
                   </p>
                 </div>
 
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold)', opacity: 0.9, display: 'block', marginBottom: 10 }}>03</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>3. Nhận máy & Đánh giá</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -81,7 +81,7 @@ export default function Guide() {
               </div>
 
               {/* Showcase Banner For Farmer */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, alignItems: 'center', background: '#ffffff', borderRadius: 20, padding: 30, border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}>
+              <div className="guide-showcase-box" style={{ background: '#ffffff', border: '1px solid var(--line)' }}>
                 <div>
                   <div className="eyebrow-label">MẸO CHO BÀ CON</div>
                   <h3 style={{ fontSize: 22, margin: '8px 0 12px' }}>Dùng Trợ lý AI Tìm máy để đặt lịch nhanh hơn</h3>
@@ -94,7 +94,7 @@ export default function Guide() {
                   </p>
                   <Link to="/search" className="btn btn-primary">Try Trợ Lý AI Tìm Máy →</Link>
                 </div>
-                <div style={{ borderRadius: 16, overflow: 'hidden', height: 260 }}>
+                <div className="guide-showcase-img-wrap">
                   <img
                     src={GUIDE_IMAGES.farmerStepImg}
                     alt="Nông dân tìm máy nông nghiệp"
@@ -109,8 +109,8 @@ export default function Guide() {
           {/* TAB 2: CHỦ MÁY CƠ GIỚI */}
           {tab === 'owner' && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 40 }}>
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+              <div className="guide-steps-grid">
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold-dark)', opacity: 0.9, display: 'block', marginBottom: 10 }}>01</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>1. Tạo tài khoản Chủ máy</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -118,7 +118,7 @@ export default function Guide() {
                   </p>
                 </div>
 
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold-dark)', opacity: 0.9, display: 'block', marginBottom: 10 }}>02</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>2. Đăng máy & Upload ảnh</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -126,7 +126,7 @@ export default function Guide() {
                   </p>
                 </div>
 
-                <div className="card-box" style={{ padding: 28, position: 'relative' }}>
+                <div className="card-box guide-step-card">
                   <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--gold-dark)', opacity: 0.9, display: 'block', marginBottom: 10 }}>03</span>
                   <h3 style={{ fontSize: 18, marginBottom: 10 }}>3. Nhận đơn & Nâng cấp VIP</h3>
                   <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
@@ -136,7 +136,7 @@ export default function Guide() {
               </div>
 
               {/* Showcase Banner For Owner */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, alignItems: 'center', background: '#FFFDF5', borderRadius: 20, padding: 30, border: '2px solid var(--gold)', boxShadow: 'var(--shadow-card)' }}>
+              <div className="guide-showcase-box" style={{ background: '#FFFDF5', border: '2px solid var(--gold)' }}>
                 <div>
                   <div className="eyebrow-label" style={{ color: 'var(--gold-dark)' }}>QUYỀN LỢI CHỦ MÁY VIP</div>
                   <h3 style={{ fontSize: 22, margin: '8px 0 12px' }}>Đứng đầu danh sách tìm kiếm & Đặt quảng cáo Banner</h3>
@@ -145,7 +145,7 @@ export default function Guide() {
                   </p>
                   <Link to="/owner" className="btn btn-primary">🚀 Khám Phá Kênh Chủ Máy →</Link>
                 </div>
-                <div style={{ borderRadius: 16, overflow: 'hidden', height: 260 }}>
+                <div className="guide-showcase-img-wrap">
                   <img
                     src={GUIDE_IMAGES.ownerStepImg}
                     alt="Chủ máy nông nghiệp An Giang"
@@ -158,9 +158,9 @@ export default function Guide() {
           )}
 
           {/* FAQ Accordion Section */}
-          <div className="card-box" style={{ marginTop: 50, padding: 36, borderRadius: 20 }}>
+          <div className="card-box" style={{ marginTop: 44, padding: 32, borderRadius: 20 }}>
             <h3 style={{ fontSize: 22, marginBottom: 20, textAlign: 'center' }}>❓ Các Câu Hỏi Thường Gặp (FAQs)</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div className="guide-faq-grid">
               <div style={{ background: 'var(--bg-light)', padding: 18, borderRadius: 12 }}>
                 <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Tôi có phải trả phí khi tìm máy trên AGRIGO không?</b>
                 <p style={{ fontSize: 13.5, margin: 0, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
@@ -178,7 +178,7 @@ export default function Guide() {
               <div style={{ background: 'var(--bg-light)', padding: 18, borderRadius: 12 }}>
                 <b style={{ color: 'var(--green-deep)', fontSize: 15, display: 'block', marginBottom: 6 }}>Q: Nếu người thuê làm hư hỏng thiết bị/máy móc thì xử lý ra sao?</b>
                 <p style={{ fontSize: 13.5, margin: 0, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-                  Hai bên cùng lập <b>Biên bản Bàn giao Kỹ thuật Số</b> trước khi vận hành. Nếu hỏng hóc do người thuê vận hành sai quy trình, sự cố va quẹt sẽ được khấu trừ từ Tiền thế chân hoặc được <b>Bảo Việt / PJICO Insurance (Gói 1.5%/đơn)</b> đền bù 100% chi phí sửa chữa.
+                  Hai bên cùng lập <b>Biên bản Bàn giao Kỹ thuật Số</b> trước khi vận hành. Nếu hỏng hóc do người thuê vận hành sai quy trình, sự cố va quẹt sẽ được khấu trừ từ Tiền thế chân hoặc được <b>Bảo hiểm (Gói 1.5%/đơn)</b> đền bù 100% chi phí sửa chữa.
                 </p>
               </div>
 
@@ -191,9 +191,9 @@ export default function Guide() {
             </div>
 
             {/* Chi tiết Quy trình An tâm 3 Bước */}
-            <div style={{ marginTop: 30, background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff', padding: 26, borderRadius: 16 }}>
-              <h4 style={{ color: 'var(--gold)', margin: '0 0 12px', fontSize: 18 }}>🛡️ Quy Trình 3 Bước Đảm Bảo Quyền Lợi Cả Hai Bên</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: 13.5 }}>
+            <div style={{ marginTop: 24, background: 'linear-gradient(135deg, #153A2E 0%, #1F5C45 100%)', color: '#fff', padding: 22, borderRadius: 16 }}>
+              <h4 style={{ color: 'var(--gold)', margin: '0 0 12px', fontSize: 17, textAlign: 'center' }}>🛡️ Quy Trình 3 Bước Đảm Bảo Quyền Lợi Cả Hai Bên</h4>
+              <div className="guide-guarantee-grid">
                 <div style={{ background: 'rgba(255,255,255,0.1)', padding: 14, borderRadius: 10 }}>
                   <b style={{ color: 'var(--gold)', display: 'block', marginBottom: 4 }}>1. Kiểm Tra Đầu Vào</b>
                   Chụp ảnh 4 góc máy & tích chọn trạng thái linh kiện trên ứng dụng trước khi bàn giao.
